@@ -4,7 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test",
+    "deploy:local": "npx hardhat run scripts/deploy/deploy.ts --network hardhat",
+    "deploy:sepolia": "npx hardhat run scripts/deploy/deploy.ts --network sepolia",
+    "register-schemas:sepolia": "npx hardhat run scripts/eas/registerSchemas.ts --network sepolia",
+    "api:dev": "npx ts-node api/server.ts",
+    "clean": "npx hardhat clean"
   },
   "repository": {
     "type": "git",
@@ -19,10 +25,17 @@
   },
   "homepage": "https://github.com/Lynette7/aas#readme",
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
-    "@types/node": "^25.2.3",
-    "hardhat": "^3.1.8",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "hardhat": "^2.22.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.6.0"
+  },
+  "dependencies": {
+    "@ethereum-attestation-service/eas-contracts": "^1.7.1",
+    "@ethereum-attestation-service/eas-sdk": "^2.7.0",
+    "@openzeppelin/contracts": "^5.1.0",
+    "dotenv": "^16.4.0",
+    "ethers": "^6.13.0"
   }
 }
