@@ -92,22 +92,24 @@ contract AASZKVerifier is IAASZKVerifier {
     /**
      * @notice Verifies a capability-threshold UltraHonk proof.
      * @param proof         Raw proof bytes from Barretenberg's UltraHonk backend.
-     * @param publicInputs  Array of public inputs as bytes32:
+     * @param publicInputs  Array of public inputs as bytes32 (must match circuit):
      *                        [0] = bytes32(taskThreshold)
      *                        [1] = bytes32(rateThresholdBps)
+     *                        [2] = bytes32(dataCommitment)   — poseidon2 hash
      * @return valid True if the proof is valid for the given public inputs.
      */
     function verifyCapabilityProof(
         bytes calldata proof,
         bytes32[] calldata publicInputs
     ) external view override returns (bool valid) {
-        // AAS expects exactly 2 public inputs: taskThreshold, rateThresholdBps
-        if (publicInputs.length < 2) revert InvalidPublicInputs();
+        // AAS expects exactly 3 public inputs matching the Noir circuit
+        if (publicInputs.length != 3) revert InvalidPublicInputs();
 
         uint256 taskThreshold = uint256(publicInputs[0]);
         uint256 rateThresholdBps = uint256(publicInputs[1]);
+        // publicInputs[2] is the data commitment — no range check needed
 
-        // Sanity-check public inputs
+        // Sanity-check numeric public inputs
         if (taskThreshold == 0) revert InvalidPublicInputs();
         if (rateThresholdBps > 10000) revert InvalidPublicInputs();
 
