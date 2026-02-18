@@ -17,7 +17,7 @@ Agents can earn on-chain attestations proving threshold claims (e.g., _"95%+ suc
 ```
 Agent completes task → CRE Workflow triggered
   → Confidential HTTP fetches performance data (private)
-  → ZK Proof generated (Noir/Groth16)
+  → ZK Proof generated (Noir / UltraHonk)
   → EAS Attestation anchored on-chain
   → Any agent can verify trustworthiness
 ```
@@ -35,7 +35,7 @@ Agent completes task → CRE Workflow triggered
 |---|---|
 | CRE (Chainlink Runtime Environment) | Workflow orchestration backbone |
 | Ethereum Attestation Service (EAS) | On-chain attestation registry |
-| Noir (Aztec) | ZK circuit DSL (Groth16 proofs) |
+| Noir (Aztec) + Barretenberg | ZK circuit DSL (UltraHonk proofs) |
 | Solidity 0.8.24 | Smart contracts (AASRegistry, AASZKVerifier) |
 | Sepolia Testnet | Primary deployment target |
 | Thirdweb SDK | Frontend Web3 connectivity |
@@ -50,14 +50,19 @@ Agent completes task → CRE Workflow triggered
 aas/
 ├── contracts/               # Solidity smart contracts
 │   ├── AASRegistry.sol      # Core registry — agent attestations & reputation graph CID
-│   ├── AASZKVerifier.sol    # Groth16 ZK proof verifier
-│   └── interfaces/
-│       └── IAASZKVerifier.sol
+│   ├── AASZKVerifier.sol    # UltraHonk ZK proof verifier wrapper
+│   ├── interfaces/
+│   │   └── IAASZKVerifier.sol
+│   └── verifiers/
+│       └── HonkVerifier.sol # Auto-generated from Barretenberg (bb)
 ├── test/                    # Hardhat test suite
-│   └── AASRegistry.test.ts
+│   ├── AASRegistry.test.ts  # 23 unit tests
+│   └── E2EProof.test.ts     # 4 E2E tests (real UltraHonk proofs on-chain)
 ├── scripts/
-│   ├── deploy/deploy.ts     # Contract deployment script
-│   └── eas/registerSchemas.ts # EAS schema registration
+│   ├── deploy/deploy.ts       # Dev-mode deployment (no verifier)
+│   ├── deploy/deployAndWire.ts # Production deployment (HonkVerifier wired)
+│   ├── eas/registerSchemas.ts  # EAS schema registration
+│   └── prover/generateProof.ts # CLI proof generation helper
 ├── cre-workflows/           # CRE workflow implementations
 │   ├── attestation-issuance/workflowA.ts    # Workflow A: issue attestations
 │   ├── attestation-verification/workflowB.ts # Workflow B: verify attestations
@@ -65,7 +70,8 @@ aas/
 ├── circuits/                # Noir ZK circuits
 │   └── capability-threshold/
 │       ├── Nargo.toml
-│       └── src/main.nr      # Capability threshold proof circuit
+│       ├── src/main.nr      # Capability threshold proof circuit
+│       └── target/          # Compiled artifacts (VK, proof, HonkVerifier.sol)
 ├── api/                     # REST API server
 │   └── server.ts
 ├── frontend/                # Next.js dashboard (Sprint 2)
@@ -146,17 +152,18 @@ Core registry managing:
 
 ### AASZKVerifier.sol
 
-Groth16 proof verifier with:
+UltraHonk proof verifier wrapper with:
 
-- BN128 precompile integration (ecAdd, ecMul, pairing)
-- Development mode for pre-VK testing
-- Hot-swappable verification key (loaded after Noir compilation)
+- Delegates to auto-generated `HonkVerifier.sol` from Barretenberg
+- Development mode fallback (pre-verifier deployment)
+- Hot-swappable HonkVerifier address via `setHonkVerifier()`
+- Public input validation (3 inputs: taskThreshold, rateThresholdBps, dataCommitment)
 
 ## EAS Schemas
 
 | Schema | Fields |
 |---|---|
-| CapabilityAttestation | `agentId, taskThreshold, rateThresholdBps, zkProof, publicInputsHash` |
+| CapabilityAttestation | `agentId, taskThreshold, rateThresholdBps, zkProof, publicInputs` |
 | EndorsementAttestation | `endorserAgentId, endorsedAgentId, endorsementType, context` |
 | TaskCompletionAttestation | `agentId, taskId, outcomeHash, success` |
 
@@ -164,15 +171,17 @@ Groth16 proof verifier with:
 
 The Noir circuit proves: _"This agent completed ≥ N tasks with ≥ P% success rate"_ — without revealing actual counts.
 
-- **Proof system:** Groth16 via Barretenberg
-- **Proof size:** ~256 bytes (constant)
-- **Verification cost:** ~280K gas
-- **Prover time:** < 2 seconds
+- **Proof system:** UltraHonk via Barretenberg (bb v0.84.0)
+- **Hash function:** Poseidon2 (data commitment), Keccak256 (Fiat-Shamir oracle for EVM)
+- **Circuit size:** ~3,042 constraints
+- **Proof size:** 14,080 bytes (440 field elements)
+- **On-chain verification cost:** ~300K gas
+- **Public inputs:** `[taskThreshold, rateThresholdBps, dataCommitment]`
 
 ## Sprint Plan
 
-- [x] **Day 1 (Feb 17):** EAS schemas, contract deployment, CRE workflow structure
-- [ ] **Day 2 (Feb 18):** Noir ZK circuit compilation & proof generation
+- [x] **Day 1 (Feb 17):** EAS schemas, contract deployment, CRE workflow structure, 23 tests passing
+- [x] **Day 2 (Feb 18):** Noir circuit compilation, UltraHonk proof generation, Solidity verifier integration, E2E proof verification (27 tests)
 - [ ] **Day 3 (Feb 19):** CRE Workflow A with Confidential HTTP
 - [ ] **Day 4 (Feb 20):** End-to-end: trigger → fetch → prove → attest
 - [ ] **Days 5-9:** Workflow B, REST API, frontend dashboard, agent-to-agent demo
