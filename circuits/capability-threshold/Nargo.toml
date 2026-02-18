@@ -1,0 +1,7 @@
+[package]
+name = "capability_threshold"
+type = "bin"
+authors = ["AAS Team"]
+compiler_version = ">=0.36.0"
+
+[dependencies]

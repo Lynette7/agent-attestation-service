@@ -1,0 +1,6 @@
+task_count = "150"
+success_count = "143"
+data_commitment_preimage = ["1", "2", "3", "4"]
+threshold_tasks = "100"
+threshold_rate_bps = "9500"
+data_commitment = "15505005361706012551741834895355031099510014664842462842053262257331543442865"
