@@ -184,10 +184,11 @@ describe("AASZKVerifier", function () {
 
   describe("Dev Mode Verification", function () {
     it("should verify a non-empty proof in dev mode", async function () {
-      // UltraHonk public inputs: [taskThreshold, rateThresholdBps] as bytes32
+      // UltraHonk public inputs: [taskThreshold, rateThresholdBps, dataCommitment] as bytes32
       const publicInputs = [
         ethers.zeroPadValue(ethers.toBeHex(100), 32),  // taskThreshold = 100
         ethers.zeroPadValue(ethers.toBeHex(9500), 32),  // rateThresholdBps = 9500
+        ethers.keccak256(ethers.toUtf8Bytes("commitment")),  // dataCommitment
       ];
 
       // Non-empty mock proof bytes (would be real UltraHonk proof in production)
@@ -204,6 +205,7 @@ describe("AASZKVerifier", function () {
       const publicInputs = [
         ethers.zeroPadValue(ethers.toBeHex(100), 32),
         ethers.zeroPadValue(ethers.toBeHex(9500), 32),
+        ethers.keccak256(ethers.toUtf8Bytes("commitment")),
       ];
 
       const result = await zkVerifier.verifyCapabilityProof(
@@ -217,6 +219,7 @@ describe("AASZKVerifier", function () {
       const publicInputs = [
         ethers.zeroPadValue(ethers.toBeHex(100), 32),
         ethers.zeroPadValue(ethers.toBeHex(10001), 32),  // > 10000
+        ethers.keccak256(ethers.toUtf8Bytes("commitment")),
       ];
 
       await expect(
@@ -228,6 +231,7 @@ describe("AASZKVerifier", function () {
       const publicInputs = [
         ethers.zeroPadValue(ethers.toBeHex(0), 32),  // zero
         ethers.zeroPadValue(ethers.toBeHex(9500), 32),
+        ethers.keccak256(ethers.toUtf8Bytes("commitment")),
       ];
 
       await expect(
@@ -238,7 +242,8 @@ describe("AASZKVerifier", function () {
     it("should reject insufficient public inputs", async function () {
       const publicInputs = [
         ethers.zeroPadValue(ethers.toBeHex(100), 32),
-        // missing rateThresholdBps
+        ethers.zeroPadValue(ethers.toBeHex(9500), 32),
+        // missing dataCommitment — only 2 of 3 inputs
       ];
 
       await expect(
