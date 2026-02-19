@@ -1,11 +1,11 @@
 /**
  * CRE Workflow C — Reputation Graph Update (Roadmap / Narrate Only)
  *
- * This workflow maintains the agent reputation graph:
+ * This workflow maintains the agent reputation graph with tier information:
  *   1. Listen for EAS attestation events on-chain
- *   2. Fetch new attestation data from EAS indexer
+ *   2. Fetch new attestation data from EAS indexer (including tier)
  *   3. Load current reputation graph from IPFS
- *   4. Add new node/edge to graph structure
+ *   4. Add new node/edge to graph structure with tier information
  *   5. Compute updated graph metrics (PageRank, centrality)
  *   6. Upload updated graph to IPFS; commit hash on-chain
  *
@@ -16,6 +16,7 @@
 export interface ReputationNode {
   agentId: string;
   attestationUIDs: string[];
+  currentTier: "STANDARD" | "VERIFIED" | null; // highest active tier
   endorsedBy: string[];
   endorses: string[];
   pageRankScore: number;

@@ -1,26 +1,39 @@
 /**
- * CRE Workflow A — Attestation Issuance
+ * CRE Workflow A — Attestation Issuance (v2 — Two-Tier System)
  *
- * This workflow handles the full attestation lifecycle:
- *   1. Receive task completion trigger from agent runtime
+ * This workflow handles the full attestation lifecycle with tier support:
+ *   1. Receive task completion trigger from agent runtime with requested tier
  *   2. Validate agent identity (wallet signature)
- *   3. Fetch performance data via Confidential HTTP
- *   4. Generate ZK proof from private data
- *   5. Submit attestation to EAS via AASRegistry
+ *   3. Fetch performance data via CRE Confidential HTTP
+ *   4. Determine if agent meets tier thresholds
+ *   5. Generate UltraHonk ZK proof from private data
+ *   6. Submit tier-specific attestation to EAS via AASRegistry
  *
+ * Tier Thresholds:
+ *   STANDARD — 10+ tasks, 70%+ success rate → never expires
+ *   VERIFIED — 100+ tasks, 95%+ success rate → expires after 90 days
  */
 
 import { ethers } from "ethers";
 
+// ─── Constants ───────────────────────────────────────────────────
+
+export const TIER_THRESHOLDS = {
+  STANDARD: { tasks: 10, rateBps: 7000 },
+  VERIFIED: { tasks: 100, rateBps: 9500 },
+} as const;
+
+export type AttestationTier = "STANDARD" | "VERIFIED";
+export const TIER_NUMERIC = { STANDARD: 1, VERIFIED: 2 } as const;
+
 // ─── Types ───────────────────────────────────────────────────────
 
 export interface AttestationTrigger {
-  agentId: string;          // hex bytes32 — keccak256(walletAddress)
-  walletAddress: string;    // agent's EOA
-  platform: string;         // 'openclaw' | 'langchain' | 'custom'
-  signature: string;        // EIP-712 signature of the request
-  taskThreshold: number;    // requested minimum task count
-  rateThresholdBps: number; // requested minimum success rate (bps)
+  agentId: string; // hex bytes32 — keccak256(walletAddress)
+  walletAddress: string; // agent's EOA
+  platform: string; // 'openclaw' | 'langchain' | 'custom'
+  signature: string; // EIP-712 signature of the request
+  tier: AttestationTier; // requested tier: 'STANDARD' | 'VERIFIED'
 }
 
 export interface PerformanceData {
@@ -36,8 +49,11 @@ export interface AttestationResult {
   attestationUID?: string;
   txHash?: string;
   proofHash?: string;
+  tier?: AttestationTier;
   issuedAt?: number;
+  expiresAt?: number;
   error?: string;
+  details?: Record<string, any>;
 }
 
 // ─── Workflow Steps ──────────────────────────────────────────────
@@ -45,57 +61,93 @@ export interface AttestationResult {
 /**
  * Step 1: Validate the trigger — verify the agent's wallet signature.
  */
-export async function validateTrigger(trigger: AttestationTrigger): Promise<boolean> {
+export async function validateTrigger(
+  trigger: AttestationTrigger
+): Promise<boolean> {
   // Verify agentId matches wallet
   const expectedAgentId = ethers.keccak256(
     ethers.solidityPacked(["address"], [trigger.walletAddress])
   );
 
   if (trigger.agentId !== expectedAgentId) {
-    console.error("Agent ID mismatch: expected", expectedAgentId, "got", trigger.agentId);
+    console.error(
+      "Agent ID mismatch: expected",
+      expectedAgentId,
+      "got",
+      trigger.agentId
+    );
+    return false;
+  }
+
+  // Validate tier
+  if (trigger.tier !== "STANDARD" && trigger.tier !== "VERIFIED") {
+    console.error("Invalid tier:", trigger.tier);
     return false;
   }
 
   // TODO: Verify EIP-712 signature in production
-  // For MVP, we trust the signed HTTP trigger
-  console.log(`[Workflow A] Trigger validated for agent ${trigger.agentId.slice(0, 10)}...`);
+  console.log(
+    `[Workflow A] Trigger validated for agent ${trigger.agentId.slice(0, 10)}... (tier: ${trigger.tier})`
+  );
   return true;
 }
 
 /**
- * Step 2: Fetch performance data via Confidential HTTP.
+ * Step 2: Fetch performance data via CRE Confidential HTTP.
  *
  * In CRE production:
  *   - This uses CRE's Confidential HTTP capability
- *   - Request params and API credentials are kept in the confidential enclave
+ *   - Request params and API credentials are held in the confidential enclave
  *   - Only a cryptographic commitment to the result leaves the enclave
+ *   - The raw response never touches the public internet
  *
- * For MVP: calls a mock agent performance API.
+ * CRE Confidential HTTP Configuration:
+ *   {
+ *     "type": "confidential_http",
+ *     "url": "https://api.agent-platform.com/v1/performance",
+ *     "method": "POST",
+ *     "headers": { "Authorization": "Bearer {{secrets.AGENT_API_KEY}}" },
+ *     "body": { "agent_id": "{{trigger.agent_id}}", "period": "all_time" },
+ *     "output_commitment": true
+ *   }
+ *
+ * For MVP: calls the mock agent performance API.
  */
 export async function fetchPerformanceData(
   agentId: string,
   _platform: string
 ): Promise<PerformanceData> {
-  console.log(`[Workflow A] Fetching performance data for agent ${agentId.slice(0, 10)}...`);
+  console.log(
+    `[Workflow A] Fetching performance data for agent ${agentId.slice(0, 10)}... (Confidential HTTP)`
+  );
 
-  // ─── CRE Confidential HTTP Simulation ──────────────────────
-  // In production, this would be:
-  // {
-  //   "type": "confidential_http",
-  //   "url": "https://api.agent-platform.com/v1/performance",
-  //   "method": "POST",
-  //   "headers": { "Authorization": "Bearer {{secrets.AGENT_API_KEY}}" },
-  //   "body": { "agent_id": "{{trigger.agent_id}}", "period": "all_time" },
-  //   "output_commitment": true
-  // }
+  // ─── CRE Confidential HTTP Integration ────────────────────────
+  // In production, this entire block is replaced by a CRE step config:
+  //   step: "confidential_fetch"
+  //   config:
+  //     url: "{{secrets.AGENT_PLATFORM_URL}}/api/performance"
+  //     method: "GET"
+  //     params:
+  //       agent_id: "{{trigger.agent_id}}"
+  //     auth:
+  //       type: "bearer"
+  //       token: "{{secrets.PLATFORM_API_KEY}}"
+  //     commitment: true
+  //
+  // The response is attested by the TEE and only the prover can read it.
 
-  // MVP: Call mock API or return simulated data
-  const mockApiUrl = process.env.AGENT_PERFORMANCE_API_URL || "http://localhost:3002/api/performance";
+  const mockApiUrl =
+    process.env.AGENT_PERFORMANCE_API_URL ||
+    "http://localhost:3002/api/performance";
 
   try {
     const response = await fetch(`${mockApiUrl}?agent_id=${agentId}`);
     if (response.ok) {
-      return (await response.json()) as PerformanceData;
+      const data = (await response.json()) as PerformanceData;
+      console.log(
+        `[Workflow A] Performance data received: ${data.taskCount} tasks, ${data.successCount} successes`
+      );
+      return data;
     }
   } catch {
     console.log("[Workflow A] Mock API unavailable, using simulated data");
@@ -112,46 +164,59 @@ export async function fetchPerformanceData(
 }
 
 /**
- * Step 3: Generate ZK proof inputs and compute the proof.
+ * Step 3: Check if the agent meets the requested tier's thresholds.
+ */
+export function checkTierEligibility(
+  performanceData: PerformanceData,
+  tier: AttestationTier
+): { eligible: boolean; actualRate: number; required: { tasks: number; rateBps: number } } {
+  const required = TIER_THRESHOLDS[tier];
+  const actualRate = Math.floor(
+    (performanceData.successCount / performanceData.taskCount) * 10000
+  );
+
+  const eligible =
+    performanceData.taskCount >= required.tasks && actualRate >= required.rateBps;
+
+  console.log(
+    `[Workflow A] Tier ${tier} eligibility check: tasks=${performanceData.taskCount}>=${required.tasks} (${performanceData.taskCount >= required.tasks ? "✓" : "✗"}), ` +
+      `rate=${actualRate}>=${required.rateBps} (${actualRate >= required.rateBps ? "✓" : "✗"}) → ${eligible ? "ELIGIBLE" : "NOT ELIGIBLE"}`
+  );
+
+  return { eligible, actualRate, required };
+}
+
+/**
+ * Step 4: Generate ZK proof inputs and compute the UltraHonk proof.
  *
  * Uses the Noir prover via Barretenberg's UltraHonk backend:
  *   1. Write Prover.toml with private witnesses + public inputs
  *   2. `nargo execute` → witness
- *   3. `bb prove --scheme ultra_honk` → raw proof bytes
+ *   3. `bb prove --scheme ultra_honk --oracle_hash keccak` → raw proof bytes
  *   4. Public inputs are [taskThreshold, rateThresholdBps, dataCommitment] as bytes32[]
  *
  * Falls back to mock proof bytes if the prover is unavailable.
  */
 export async function generateZKProof(
   performanceData: PerformanceData,
-  taskThreshold: number,
-  rateThresholdBps: number
-): Promise<{ proof: string; publicInputs: string[]; meetsThreshold: boolean }> {
-  console.log(`[Workflow A] Generating ZK proof (UltraHonk)...`);
-  console.log(`  Private: taskCount=${performanceData.taskCount}, successCount=${performanceData.successCount}`);
-  console.log(`  Public:  taskThreshold=${taskThreshold}, rateThresholdBps=${rateThresholdBps}`);
-
-  // Check if agent meets thresholds
-  const actualRate = Math.floor(
-    (performanceData.successCount / performanceData.taskCount) * 10000
+  tier: AttestationTier
+): Promise<{ proof: string; publicInputs: string[] }> {
+  const thresholds = TIER_THRESHOLDS[tier];
+  console.log(`[Workflow A] Generating ZK proof (UltraHonk) for ${tier} tier...`);
+  console.log(
+    `  Private: taskCount=${performanceData.taskCount}, successCount=${performanceData.successCount}`
   );
-  const meetsThreshold =
-    performanceData.taskCount >= taskThreshold && actualRate >= rateThresholdBps;
-
-  if (!meetsThreshold) {
-    console.log(`[Workflow A] Agent does not meet thresholds (actual rate: ${actualRate} bps)`);
-    return {
-      proof: "0x",
-      publicInputs: [],
-      meetsThreshold: false,
-    };
-  }
+  console.log(
+    `  Public:  taskThreshold=${thresholds.tasks}, rateThresholdBps=${thresholds.rateBps}`
+  );
 
   // Try real proof generation, fall back to mock if prover unavailable
   try {
-    const { generateCapabilityProof } = await import("../../scripts/prover/generateProof");
+    const { generateCapabilityProof } = await import(
+      "../../scripts/prover/generateProof"
+    );
 
-    // Use deterministic preimage derived from agent data for reproducibility
+    // Use deterministic preimage derived from agent data
     const preimage: [bigint, bigint, bigint, bigint] = [
       BigInt(performanceData.taskCount),
       BigInt(performanceData.successCount),
@@ -159,58 +224,62 @@ export async function generateZKProof(
       BigInt(performanceData.lastTaskTimestamp),
     ];
 
-    // Compute data commitment (poseidon2 hash happens inside the circuit)
-    // For the public input, we need to pass the expected commitment value.
-    // In production, this would be computed off-chain with a poseidon2 lib.
-    // For now, let nargo execute compute it — the commitment is a circuit output.
     const result = await generateCapabilityProof({
       taskCount: performanceData.taskCount,
       successCount: performanceData.successCount,
       dataCommitmentPreimage: preimage,
-      thresholdTasks: taskThreshold,
-      thresholdRateBps: rateThresholdBps,
+      thresholdTasks: thresholds.tasks,
+      thresholdRateBps: thresholds.rateBps,
       dataCommitment: 0n, // placeholder — computed by circuit
     });
 
     if (result.success) {
-      console.log(`[Workflow A] Real UltraHonk proof generated (${(result.proof.length - 2) / 2} bytes)`);
-      return { proof: result.proof, publicInputs: result.publicInputs, meetsThreshold: true };
+      console.log(
+        `[Workflow A] Real UltraHonk proof generated (${(result.proof.length - 2) / 2} bytes)`
+      );
+      return { proof: result.proof, publicInputs: result.publicInputs };
     }
 
-    console.log(`[Workflow A] Prover returned error: ${result.error}, falling back to mock`);
+    console.log(
+      `[Workflow A] Prover returned error: ${result.error}, falling back to mock`
+    );
   } catch (err) {
     console.log(`[Workflow A] Real prover unavailable, using mock proof`);
   }
 
   // Fallback: mock proof for dev/demo mode
   const publicInputs = [
-    ethers.zeroPadValue(ethers.toBeHex(taskThreshold), 32),
-    ethers.zeroPadValue(ethers.toBeHex(rateThresholdBps), 32),
+    ethers.zeroPadValue(ethers.toBeHex(thresholds.tasks), 32),
+    ethers.zeroPadValue(ethers.toBeHex(thresholds.rateBps), 32),
     ethers.zeroPadValue(ethers.toBeHex(0), 32), // zero commitment in mock mode
   ];
   const mockProof = ethers.hexlify(ethers.randomBytes(128));
 
-  console.log(`[Workflow A] Mock proof generated (${mockProof.length / 2 - 1} bytes)`);
-  return { proof: mockProof, publicInputs, meetsThreshold: true };
+  console.log(
+    `[Workflow A] Mock proof generated (${mockProof.length / 2 - 1} bytes)`
+  );
+  return { proof: mockProof, publicInputs };
 }
 
 /**
- * Step 4: Submit attestation to EAS via AASRegistry contract.
+ * Step 5: Submit tier-specific attestation to EAS via AASRegistry contract.
  */
 export async function submitAttestation(
   registryAddress: string,
   agentId: string,
-  taskThreshold: number,
-  rateThresholdBps: number,
+  tier: AttestationTier,
   proof: string,
   publicInputs: string[],
   signer: ethers.Signer
 ): Promise<AttestationResult> {
-  console.log(`[Workflow A] Submitting attestation to EAS...`);
+  const thresholds = TIER_THRESHOLDS[tier];
+  const tierNumeric = TIER_NUMERIC[tier];
+
+  console.log(`[Workflow A] Submitting ${tier} attestation to EAS...`);
 
   const registryABI = [
-    "function createCapabilityAttestation(bytes32 agentId, uint64 taskThreshold, uint64 rateThresholdBps, bytes calldata zkProof, bytes32[] calldata publicInputs) external returns (bytes32 uid)",
-    "event AttestationCreated(bytes32 indexed agentId, bytes32 indexed uid, uint64 taskThreshold, uint64 rateThresholdBps)",
+    "function createCapabilityAttestation(bytes32 agentId, uint64 taskThreshold, uint64 rateThresholdBps, bytes calldata zkProof, bytes32[] calldata publicInputs, uint8 tier) external returns (bytes32 uid)",
+    "event AttestationCreated(bytes32 indexed agentId, bytes32 indexed uid, uint64 taskThreshold, uint64 rateThresholdBps, string tier, uint64 expiresAt)",
   ];
 
   const registry = new ethers.Contract(registryAddress, registryABI, signer);
@@ -218,32 +287,51 @@ export async function submitAttestation(
   try {
     const tx = await registry.createCapabilityAttestation(
       agentId,
-      taskThreshold,
-      rateThresholdBps,
+      thresholds.tasks,
+      thresholds.rateBps,
       proof,
-      publicInputs
+      publicInputs,
+      tierNumeric
     );
 
     const receipt = await tx.wait();
 
-    // Parse the AttestationCreated event to get the UID
+    // Parse the AttestationCreated event to get the UID and expiresAt
     const event = receipt?.logs?.find(
-      (log: any) => log.topics?.[0] === ethers.id("AttestationCreated(bytes32,bytes32,uint64,uint64)")
+      (log: any) =>
+        log.topics?.[0] ===
+        ethers.id(
+          "AttestationCreated(bytes32,bytes32,uint64,uint64,string,uint64)"
+        )
     );
     const attestationUID = event?.topics?.[2] || "UNKNOWN";
 
-    console.log(`[Workflow A] Attestation submitted! UID: ${attestationUID}`);
+    const now = Math.floor(Date.now() / 1000);
+    const expiresAt =
+      tier === "VERIFIED" ? now + 90 * 24 * 60 * 60 : 0;
+
+    console.log(`[Workflow A] ${tier} attestation submitted! UID: ${attestationUID}`);
     console.log(`[Workflow A] TX hash: ${tx.hash}`);
+    if (expiresAt > 0) {
+      console.log(
+        `[Workflow A] Expires: ${new Date(expiresAt * 1000).toISOString()}`
+      );
+    }
 
     return {
       success: true,
       attestationUID,
       txHash: tx.hash,
       proofHash: publicInputs[0],
-      issuedAt: Math.floor(Date.now() / 1000),
+      tier,
+      issuedAt: now,
+      expiresAt,
     };
   } catch (error: any) {
-    console.error(`[Workflow A] Attestation submission failed:`, error.message);
+    console.error(
+      `[Workflow A] Attestation submission failed:`,
+      error.message
+    );
     return {
       success: false,
       error: error.message,
@@ -252,14 +340,15 @@ export async function submitAttestation(
 }
 
 /**
- * Full Workflow A execution — orchestrates all steps.
+ * Full Workflow A execution — orchestrates all steps with tier support.
  */
 export async function executeWorkflowA(
   trigger: AttestationTrigger,
   registryAddress: string,
   signer: ethers.Signer
 ): Promise<AttestationResult> {
-  console.log("\n=== CRE Workflow A: Attestation Issuance ===\n");
+  console.log("\n=== CRE Workflow A: Attestation Issuance (v2) ===\n");
+  console.log(`Requested tier: ${trigger.tier}`);
 
   // Step 1: Validate trigger
   const isValid = await validateTrigger(trigger);
@@ -268,25 +357,42 @@ export async function executeWorkflowA(
   }
 
   // Step 2: Fetch performance data (Confidential HTTP)
-  const performanceData = await fetchPerformanceData(trigger.agentId, trigger.platform);
-
-  // Step 3: Generate ZK proof
-  const { proof, publicInputs, meetsThreshold } = await generateZKProof(
-    performanceData,
-    trigger.taskThreshold,
-    trigger.rateThresholdBps
+  const performanceData = await fetchPerformanceData(
+    trigger.agentId,
+    trigger.platform
   );
 
-  if (!meetsThreshold) {
-    return { success: false, error: "THRESHOLD_NOT_MET" };
+  // Step 3: Check tier eligibility
+  const { eligible, actualRate, required } = checkTierEligibility(
+    performanceData,
+    trigger.tier
+  );
+
+  if (!eligible) {
+    return {
+      success: false,
+      error: "THRESHOLD_NOT_MET",
+      details: {
+        tier_attempted: trigger.tier,
+        actual_tasks: performanceData.taskCount,
+        required_tasks: required.tasks,
+        actual_rate_bps: actualRate,
+        required_rate_bps: required.rateBps,
+      },
+    };
   }
 
-  // Step 4: Submit attestation on-chain
+  // Step 4: Generate ZK proof
+  const { proof, publicInputs } = await generateZKProof(
+    performanceData,
+    trigger.tier
+  );
+
+  // Step 5: Submit attestation on-chain
   const result = await submitAttestation(
     registryAddress,
     trigger.agentId,
-    trigger.taskThreshold,
-    trigger.rateThresholdBps,
+    trigger.tier,
     proof,
     publicInputs,
     signer
