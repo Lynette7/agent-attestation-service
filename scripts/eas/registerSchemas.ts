@@ -4,27 +4,82 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 /**
- * Register AAS EAS schemas on the target network.
+ * Register AAS EAS schemas on the target network (v2 — two-tier system).
  *
  * Schemas:
- *   1. CapabilityAttestation — agent capability proof with ZK data
- *   2. EndorsementAttestation — agent-to-agent endorsements
- *   3. TaskCompletionAttestation — individual task completion records
+ *   1. StandardTierAttestation — STANDARD tier (10+ tasks, 70%+ rate, no expiry)
+ *   2. VerifiedTierAttestation — VERIFIED tier (100+ tasks, 95%+ rate, 90-day expiry)
+ *   3. EndorsementAttestation — agent-to-agent endorsements
+ *   4. TaskCompletionAttestation — individual task completion records
  *
  * Usage:
  *   npx hardhat run scripts/eas/registerSchemas.ts --network sepolia
  *   npx hardhat run scripts/eas/registerSchemas.ts --network hardhat
  */
 
-// EAS Schema Registry ABI (only the register function we need)
+// EAS Schema Registry ABI (register + getSchema for existence checks)
 const SCHEMA_REGISTRY_ABI = [
   "function register(string calldata schema, address resolver, bool revocable) external returns (bytes32)",
+  "function getSchema(bytes32 uid) external view returns (tuple(bytes32 uid, address resolver, bool revocable, string schema))",
   "event Registered(bytes32 indexed uid, address indexed registerer, tuple(bytes32 uid, address resolver, bool revocable, string schema) schema)",
 ];
 
+/**
+ * Compute the deterministic EAS schema UID (matches SchemaRegistry logic):
+ *   keccak256(abi.encodePacked(schema, resolver, revocable))
+ */
+function computeSchemaUID(
+  schema: string,
+  resolver: string,
+  revocable: boolean
+): string {
+  return ethers.keccak256(
+    ethers.solidityPacked(
+      ["string", "address", "bool"],
+      [schema, resolver, revocable]
+    )
+  );
+}
+
+/**
+ * Register a schema if it doesn't already exist.
+ * Returns the schema UID whether newly registered or pre-existing.
+ */
+async function registerIfNeeded(
+  schemaRegistry: ethers.Contract,
+  name: string,
+  schema: string,
+  resolver: string,
+  revocable: boolean
+): Promise<string> {
+  const uid = computeSchemaUID(schema, resolver, revocable);
+
+  // Check if already registered
+  try {
+    const existing = await schemaRegistry.getSchema(uid);
+    if (existing.uid === uid) {
+      console.log(`  ✓ Already registered — UID: ${uid}`);
+      return uid;
+    }
+  } catch {
+    // getSchema reverts or returns empty for non-existent — proceed to register
+  }
+
+  // Register
+  const tx = await schemaRegistry.register(schema, resolver, revocable);
+  const receipt = await tx.wait();
+  const registeredUID = receipt?.logs?.[0]?.topics?.[1] || uid;
+  console.log(`  ✓ Registered — TX: ${tx.hash}`);
+  console.log(`  ✓ UID: ${registeredUID}`);
+  return registeredUID;
+}
+
 async function main() {
   const [deployer] = await ethers.getSigners();
-  console.log("Registering EAS schemas with account:", deployer.address);
+  console.log("Registering EAS schemas (v2 two-tier) with account:", deployer.address);
+
+  const balance = await ethers.provider.getBalance(deployer.address);
+  console.log("Account balance:", ethers.formatEther(balance), "ETH");
 
   // Schema Registry address (Sepolia)
   const SCHEMA_REGISTRY_ADDRESS =
@@ -37,63 +92,67 @@ async function main() {
     deployer
   );
 
-  // ─── Schema 1: CapabilityAttestation ───────────────────────────
-  console.log("\n--- Registering CapabilityAttestation Schema ---");
-  const capabilitySchema =
-    "bytes32 agentId, uint64 taskThreshold, uint64 rateThresholdBps, bytes zkProof, bytes32 publicInputsHash";
-
-  const capTx = await schemaRegistry.register(
-    capabilitySchema,
-    ethers.ZeroAddress, // No resolver for MVP
-    true // Revocable
+  // ─── Schema 1: StandardTierAttestation ─────────────────────────
+  // NOTE: includes `uint8 tier` to differentiate from VerifiedTier schema
+  console.log("\n--- StandardTierAttestation Schema ---");
+  const standardTierSchema =
+    "bytes32 agentId, uint8 tier, uint64 taskThreshold, uint64 rateThresholdBps, bytes zkProof, bytes32[] publicInputs, uint64 issuedAt, uint64 expiresAt";
+  const stdSchemaUID = await registerIfNeeded(
+    schemaRegistry,
+    "StandardTierAttestation",
+    standardTierSchema,
+    ethers.ZeroAddress,
+    true
   );
-  const capReceipt = await capTx.wait();
-  const capSchemaUID = capReceipt?.logs?.[0]?.topics?.[1] || "PARSE_MANUALLY";
-  console.log("CapabilityAttestation schema registered!");
-  console.log("  TX hash:", capTx.hash);
-  console.log("  Schema UID:", capSchemaUID);
 
-  // ─── Schema 2: EndorsementAttestation ──────────────────────────
-  console.log("\n--- Registering EndorsementAttestation Schema ---");
+  // ─── Schema 2: VerifiedTierAttestation ─────────────────────────
+  // NOTE: includes `uint8 tier` + `uint64 verifiedSince` to differentiate
+  console.log("\n--- VerifiedTierAttestation Schema ---");
+  const verifiedTierSchema =
+    "bytes32 agentId, uint8 tier, uint64 taskThreshold, uint64 rateThresholdBps, bytes zkProof, bytes32[] publicInputs, uint64 issuedAt, uint64 expiresAt, uint64 verifiedSince";
+  const verSchemaUID = await registerIfNeeded(
+    schemaRegistry,
+    "VerifiedTierAttestation",
+    verifiedTierSchema,
+    ethers.ZeroAddress,
+    true
+  );
+
+  // ─── Schema 3: EndorsementAttestation ──────────────────────────
+  console.log("\n--- EndorsementAttestation Schema ---");
   const endorsementSchema =
     "bytes32 endorserAgentId, bytes32 endorsedAgentId, string endorsementType, string context";
-
-  const endTx = await schemaRegistry.register(
+  const endSchemaUID = await registerIfNeeded(
+    schemaRegistry,
+    "EndorsementAttestation",
     endorsementSchema,
     ethers.ZeroAddress,
     true
   );
-  const endReceipt = await endTx.wait();
-  const endSchemaUID = endReceipt?.logs?.[0]?.topics?.[1] || "PARSE_MANUALLY";
-  console.log("EndorsementAttestation schema registered!");
-  console.log("  TX hash:", endTx.hash);
-  console.log("  Schema UID:", endSchemaUID);
 
-  // ─── Schema 3: TaskCompletionAttestation ───────────────────────
-  console.log("\n--- Registering TaskCompletionAttestation Schema ---");
+  // ─── Schema 4: TaskCompletionAttestation ───────────────────────
+  console.log("\n--- TaskCompletionAttestation Schema ---");
   const taskCompletionSchema =
     "bytes32 agentId, bytes32 taskId, bytes32 outcomeHash, bool success";
-
-  const taskTx = await schemaRegistry.register(
+  const taskSchemaUID = await registerIfNeeded(
+    schemaRegistry,
+    "TaskCompletionAttestation",
     taskCompletionSchema,
     ethers.ZeroAddress,
     true
   );
-  const taskReceipt = await taskTx.wait();
-  const taskSchemaUID = taskReceipt?.logs?.[0]?.topics?.[1] || "PARSE_MANUALLY";
-  console.log("TaskCompletionAttestation schema registered!");
-  console.log("  TX hash:", taskTx.hash);
-  console.log("  Schema UID:", taskSchemaUID);
 
   // ─── Summary ───────────────────────────────────────────────────
   console.log("\n========================================");
-  console.log("EAS SCHEMA REGISTRATION COMPLETE");
+  console.log("EAS SCHEMA REGISTRATION COMPLETE (v2)");
   console.log("========================================");
-  console.log(`CapabilityAttestation UID:       ${capSchemaUID}`);
+  console.log(`StandardTierAttestation UID:     ${stdSchemaUID}`);
+  console.log(`VerifiedTierAttestation UID:     ${verSchemaUID}`);
   console.log(`EndorsementAttestation UID:      ${endSchemaUID}`);
   console.log(`TaskCompletionAttestation UID:   ${taskSchemaUID}`);
   console.log("\nUpdate your .env file:");
-  console.log(`CAPABILITY_SCHEMA_UID=${capSchemaUID}`);
+  console.log(`STANDARD_TIER_SCHEMA_UID=${stdSchemaUID}`);
+  console.log(`VERIFIED_TIER_SCHEMA_UID=${verSchemaUID}`);
   console.log(`ENDORSEMENT_SCHEMA_UID=${endSchemaUID}`);
   console.log(`TASK_COMPLETION_SCHEMA_UID=${taskSchemaUID}`);
   console.log("========================================");
@@ -105,7 +164,8 @@ async function main() {
     const AASRegistry = await ethers.getContractFactory("AASRegistry");
     const registry = AASRegistry.attach(registryAddress);
     const setTx = await registry.setSchemaUIDs(
-      capSchemaUID,
+      stdSchemaUID,
+      verSchemaUID,
       endSchemaUID,
       taskSchemaUID
     );
