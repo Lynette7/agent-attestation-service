@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 import { AASRegistry, AASZKVerifier } from "../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
-describe("AASRegistry", function () {
+describe("AASRegistry (v2 — Two-Tier System)", function () {
   let registry: AASRegistry;
   let zkVerifier: AASZKVerifier;
   let owner: SignerWithAddress;
@@ -24,9 +24,7 @@ describe("AASRegistry", function () {
     await zkVerifier.waitForDeployment();
 
     // For local tests, use dummy addresses for EAS contracts
-    // (the actual EAS calls will revert, but we test our contract logic)
-    // In integration tests, we'd fork Sepolia
-    mockEAS = orchestrator.address; // placeholder — will be replaced with mock
+    mockEAS = orchestrator.address;
     mockSchemaRegistry = orchestrator.address;
 
     // Deploy Registry
@@ -55,6 +53,15 @@ describe("AASRegistry", function () {
       );
     });
 
+    it("should expose tier constants", async function () {
+      expect(await registry.TIER_STANDARD()).to.equal(1);
+      expect(await registry.TIER_VERIFIED()).to.equal(2);
+    });
+
+    it("should expose 90-day expiry duration", async function () {
+      expect(await registry.VERIFIED_EXPIRY_DURATION()).to.equal(90 * 24 * 60 * 60);
+    });
+
     it("should revert with zero addresses", async function () {
       const Registry = await ethers.getContractFactory("AASRegistry");
       await expect(
@@ -81,6 +88,14 @@ describe("AASRegistry", function () {
       expect(await registry.isRegisteredAgent(agentId)).to.be.true;
     });
 
+    it("should store the agent wallet address", async function () {
+      const agentId = ethers.keccak256(
+        ethers.solidityPacked(["address"], [agent.address])
+      );
+      await registry.connect(agent).registerAgent(agentId);
+      expect(await registry.agentWallet(agentId)).to.equal(agent.address);
+    });
+
     it("should reject duplicate registration", async function () {
       const agentId = ethers.keccak256(
         ethers.solidityPacked(["address"], [agent.address])
@@ -94,7 +109,6 @@ describe("AASRegistry", function () {
     });
 
     it("should reject mismatched agentId", async function () {
-      // Try to register with someone else's agentId
       const wrongAgentId = ethers.keccak256(
         ethers.solidityPacked(["address"], [other.address])
       );
@@ -106,16 +120,18 @@ describe("AASRegistry", function () {
   });
 
   describe("Admin Functions", function () {
-    it("should allow owner to set schema UIDs", async function () {
-      const capUID = ethers.id("capability");
+    it("should allow owner to set four schema UIDs", async function () {
+      const stdUID = ethers.id("standard");
+      const verUID = ethers.id("verified");
       const endUID = ethers.id("endorsement");
       const taskUID = ethers.id("task");
 
-      await expect(registry.setSchemaUIDs(capUID, endUID, taskUID))
+      await expect(registry.setSchemaUIDs(stdUID, verUID, endUID, taskUID))
         .to.emit(registry, "SchemaUIDsUpdated")
-        .withArgs(capUID, endUID, taskUID);
+        .withArgs(stdUID, verUID, endUID, taskUID);
 
-      expect(await registry.capabilitySchemaUID()).to.equal(capUID);
+      expect(await registry.standardTierSchemaUID()).to.equal(stdUID);
+      expect(await registry.verifiedTierSchemaUID()).to.equal(verUID);
       expect(await registry.endorsementSchemaUID()).to.equal(endUID);
       expect(await registry.taskCompletionSchemaUID()).to.equal(taskUID);
     });
@@ -124,7 +140,12 @@ describe("AASRegistry", function () {
       await expect(
         registry
           .connect(other)
-          .setSchemaUIDs(ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash)
+          .setSchemaUIDs(
+            ethers.ZeroHash,
+            ethers.ZeroHash,
+            ethers.ZeroHash,
+            ethers.ZeroHash
+          )
       ).to.be.revertedWithCustomError(registry, "OnlyOwner");
     });
 
@@ -140,6 +161,51 @@ describe("AASRegistry", function () {
       await expect(
         registry.setCREOrchestrator(ethers.ZeroAddress)
       ).to.be.revertedWithCustomError(registry, "ZeroAddress");
+    });
+  });
+
+  describe("Attestation Metadata", function () {
+    it("should return zero tier for unknown attestation UID", async function () {
+      const unknownUID = ethers.id("unknown");
+      const meta = await registry.getAttestationMeta(unknownUID);
+      expect(meta.tier).to.equal(0);
+      expect(meta.expiresAt).to.equal(0);
+      expect(meta.revoked).to.be.false;
+    });
+
+    it("should return false for isAttestationValid with unknown UID", async function () {
+      const unknownUID = ethers.id("unknown");
+      expect(await registry.isAttestationValid(unknownUID)).to.be.false;
+    });
+  });
+
+  describe("Revocation", function () {
+    it("should reject revocation from non-agent-owner", async function () {
+      const agentId = ethers.keccak256(
+        ethers.solidityPacked(["address"], [agent.address])
+      );
+
+      // Register agent
+      await registry.connect(agent).registerAgent(agentId);
+
+      // Try to revoke from wrong address (other is not the agent wallet)
+      const fakeUID = ethers.id("fake");
+      await expect(
+        registry.connect(other).revokeAttestation(agentId, fakeUID)
+      ).to.be.revertedWithCustomError(registry, "OnlyAgentOwner");
+    });
+
+    it("should reject revocation of non-existent attestation", async function () {
+      const agentId = ethers.keccak256(
+        ethers.solidityPacked(["address"], [agent.address])
+      );
+
+      await registry.connect(agent).registerAgent(agentId);
+
+      const fakeUID = ethers.id("fake");
+      await expect(
+        registry.connect(agent).revokeAttestation(agentId, fakeUID)
+      ).to.be.revertedWithCustomError(registry, "AttestationNotFound");
     });
   });
 
@@ -184,16 +250,30 @@ describe("AASZKVerifier", function () {
 
   describe("Dev Mode Verification", function () {
     it("should verify a non-empty proof in dev mode", async function () {
-      // UltraHonk public inputs: [taskThreshold, rateThresholdBps, dataCommitment] as bytes32
+      // UltraHonk public inputs: [taskThreshold, rateThresholdBps, dataCommitment]
       const publicInputs = [
-        ethers.zeroPadValue(ethers.toBeHex(100), 32),  // taskThreshold = 100
-        ethers.zeroPadValue(ethers.toBeHex(9500), 32),  // rateThresholdBps = 9500
-        ethers.keccak256(ethers.toUtf8Bytes("commitment")),  // dataCommitment
+        ethers.zeroPadValue(ethers.toBeHex(100), 32),
+        ethers.zeroPadValue(ethers.toBeHex(9500), 32),
+        ethers.keccak256(ethers.toUtf8Bytes("commitment")),
       ];
 
-      // Non-empty mock proof bytes (would be real UltraHonk proof in production)
       const mockProof = ethers.hexlify(ethers.randomBytes(64));
 
+      const result = await zkVerifier.verifyCapabilityProof(
+        mockProof,
+        publicInputs
+      );
+      expect(result).to.be.true;
+    });
+
+    it("should verify STANDARD tier thresholds in dev mode", async function () {
+      const publicInputs = [
+        ethers.zeroPadValue(ethers.toBeHex(10), 32),   // STANDARD: 10 tasks
+        ethers.zeroPadValue(ethers.toBeHex(7000), 32),  // STANDARD: 70%
+        ethers.keccak256(ethers.toUtf8Bytes("commitment")),
+      ];
+
+      const mockProof = ethers.hexlify(ethers.randomBytes(64));
       const result = await zkVerifier.verifyCapabilityProof(
         mockProof,
         publicInputs
@@ -218,7 +298,7 @@ describe("AASZKVerifier", function () {
     it("should reject invalid rate threshold (>10000 bps)", async function () {
       const publicInputs = [
         ethers.zeroPadValue(ethers.toBeHex(100), 32),
-        ethers.zeroPadValue(ethers.toBeHex(10001), 32),  // > 10000
+        ethers.zeroPadValue(ethers.toBeHex(10001), 32),
         ethers.keccak256(ethers.toUtf8Bytes("commitment")),
       ];
 
@@ -229,7 +309,7 @@ describe("AASZKVerifier", function () {
 
     it("should reject zero task threshold", async function () {
       const publicInputs = [
-        ethers.zeroPadValue(ethers.toBeHex(0), 32),  // zero
+        ethers.zeroPadValue(ethers.toBeHex(0), 32),
         ethers.zeroPadValue(ethers.toBeHex(9500), 32),
         ethers.keccak256(ethers.toUtf8Bytes("commitment")),
       ];
@@ -254,7 +334,6 @@ describe("AASZKVerifier", function () {
 
   describe("HonkVerifier Integration", function () {
     it("should allow owner to set HonkVerifier address", async function () {
-      // Use a random address as placeholder for the auto-generated verifier
       const fakeVerifierAddr = ethers.Wallet.createRandom().address;
 
       await expect(zkVerifier.setHonkVerifier(fakeVerifierAddr))
