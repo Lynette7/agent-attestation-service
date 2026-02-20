@@ -1,14 +1,17 @@
 /**
- * AAS REST API Server
+ * AAS REST API Server (v2 — Two-Tier System)
  *
  * Wraps CRE Workflows A and B with a RESTful HTTP interface.
+ * Supports tier-based attestation, verification with tier filtering,
+ * attestation revocation, and the new two-tier system.
  *
  * Endpoints:
- *   POST /api/v1/attest         — Trigger attestation issuance (Workflow A)
- *   GET  /api/v1/verify/:agentId — Verify agent attestation (Workflow B)
+ *   POST /api/v1/attest           — Trigger attestation issuance (Workflow A)
+ *   GET  /api/v1/verify/:agentId  — Verify agent attestation (Workflow B)
  *   GET  /api/v1/reputation/:agentId — Query reputation graph
- *   POST /api/v1/endorse        — Submit endorsement
- *   GET  /api/v1/health         — Health check
+ *   POST /api/v1/endorse          — Submit endorsement
+ *   POST /api/v1/revoke           — Revoke attestation(s)
+ *   GET  /api/v1/health           — Health check
  */
 
 import { createServer, IncomingMessage, ServerResponse } from "http";
@@ -47,61 +50,107 @@ function parseUrl(url: string): { pathname: string; params: URLSearchParams } {
 
 // ─── Route Handlers ──────────────────────────────────────────────
 
+/**
+ * POST /api/v1/attest
+ * Trigger attestation issuance with tier support.
+ * Body: { agent_id, platform, tier: 'STANDARD' | 'VERIFIED', signature }
+ */
 async function handleAttest(req: IncomingMessage, res: ServerResponse) {
   const body = await parseBody(req);
-  const { agent_id, platform, task_threshold, rate_threshold_bps, signature } = body;
+  const { agent_id, platform, tier, signature } = body;
 
-  if (!agent_id || !task_threshold || !rate_threshold_bps) {
+  if (!agent_id || !tier) {
     return jsonResponse(res, 400, {
       error: "MISSING_FIELDS",
-      details: "Required: agent_id, task_threshold, rate_threshold_bps",
+      details: "Required: agent_id, tier ('STANDARD' or 'VERIFIED')",
+    });
+  }
+
+  // Validate tier
+  if (tier !== "STANDARD" && tier !== "VERIFIED") {
+    return jsonResponse(res, 400, {
+      error: "INVALID_TIER",
+      details: "tier must be 'STANDARD' or 'VERIFIED'",
     });
   }
 
   // TODO: Verify EIP-712 signature
   // TODO: Call Workflow A via CRE trigger
 
-  console.log(`[API] Attestation request for agent ${agent_id}`);
+  console.log(`[API] Attestation request for agent ${agent_id} (tier: ${tier})`);
 
-  // For MVP, return a mock response indicating the workflow was triggered
+  // For MVP, trigger workflow and return status
+  // In production, this would create a CRE job and return a job ID
+  const thresholds =
+    tier === "STANDARD"
+      ? { tasks: 10, rateBps: 7000, expiresIn: "never" }
+      : { tasks: 100, rateBps: 9500, expiresIn: "90 days" };
+
   jsonResponse(res, 200, {
     status: "WORKFLOW_TRIGGERED",
-    message: "Attestation issuance workflow started",
+    message: `${tier} attestation issuance workflow started`,
     agent_id,
-    task_threshold,
-    rate_threshold_bps,
+    tier,
+    thresholds,
     estimated_completion_seconds: 15,
   });
 }
 
-async function handleVerify(agentId: string, params: URLSearchParams, res: ServerResponse) {
-  const minTasks = parseInt(params.get("min_tasks") || "0");
-  const minRateBps = parseInt(params.get("min_rate_bps") || "0");
+/**
+ * GET /api/v1/verify/:agentId
+ * Verify agent attestation with tier filtering and expiry checks.
+ * Query params: min_tier, max_age_days, include_expired
+ */
+async function handleVerify(
+  agentId: string,
+  params: URLSearchParams,
+  res: ServerResponse
+) {
+  const minTier = params.get("min_tier") as "STANDARD" | "VERIFIED" | null;
   const maxAgeDays = params.get("max_age_days")
     ? parseInt(params.get("max_age_days")!)
     : undefined;
+  const includeExpired = params.get("include_expired") === "true";
 
-  console.log(`[API] Verification request for agent ${agentId}`);
+  console.log(
+    `[API] Verification request for agent ${agentId} (min_tier: ${minTier || "ANY"}, max_age: ${maxAgeDays || "∞"} days)`
+  );
 
-  // TODO: Call Workflow B
+  // Validate tier parameter if provided
+  if (minTier && minTier !== "STANDARD" && minTier !== "VERIFIED") {
+    return jsonResponse(res, 400, {
+      error: "INVALID_TIER",
+      details: "min_tier must be 'STANDARD' or 'VERIFIED'",
+    });
+  }
+
+  // TODO: Call Workflow B with tier filtering
   // For MVP, return a structured response
   jsonResponse(res, 200, {
     verified: false,
+    tier: null,
     attestation_uid: null,
-    task_threshold: minTasks,
-    rate_bps: minRateBps,
+    task_threshold: 0,
+    rate_bps: 0,
     proof_valid: false,
     issued_at: 0,
-    message: "Workflow B integration pending — connect after contract deployment",
+    expires_at: 0,
+    message:
+      "Workflow B integration pending — connect after contract deployment",
   });
 }
 
+/**
+ * GET /api/v1/reputation/:agentId
+ * Query reputation graph for an agent.
+ */
 async function handleReputation(agentId: string, res: ServerResponse) {
   console.log(`[API] Reputation query for agent ${agentId}`);
 
-  // Roadmap: read from IPFS using committed CID
+  // Roadmap: read from IPFS using latest committed CID
   jsonResponse(res, 200, {
     agent_id: agentId,
+    current_tier: null,
     attestations: [],
     endorsers: [],
     endorsees: [],
@@ -111,18 +160,27 @@ async function handleReputation(agentId: string, res: ServerResponse) {
   });
 }
 
+/**
+ * POST /api/v1/endorse
+ * Submit an agent-to-agent endorsement.
+ * Body: { endorser_agent_id, endorsed_agent_id, endorsement_type, context }
+ */
 async function handleEndorse(req: IncomingMessage, res: ServerResponse) {
   const body = await parseBody(req);
-  const { endorser_agent_id, endorsed_agent_id, endorsement_type, context } = body;
+  const { endorser_agent_id, endorsed_agent_id, endorsement_type, context } =
+    body;
 
   if (!endorser_agent_id || !endorsed_agent_id || !endorsement_type) {
     return jsonResponse(res, 400, {
       error: "MISSING_FIELDS",
-      details: "Required: endorser_agent_id, endorsed_agent_id, endorsement_type",
+      details:
+        "Required: endorser_agent_id, endorsed_agent_id, endorsement_type",
     });
   }
 
-  console.log(`[API] Endorsement: ${endorser_agent_id} → ${endorsed_agent_id}`);
+  console.log(
+    `[API] Endorsement: ${endorser_agent_id} → ${endorsed_agent_id}`
+  );
 
   jsonResponse(res, 200, {
     status: "ENDORSEMENT_SUBMITTED",
@@ -133,13 +191,50 @@ async function handleEndorse(req: IncomingMessage, res: ServerResponse) {
   });
 }
 
+/**
+ * POST /api/v1/revoke
+ * Revoke attestation(s) for an agent.
+ * Body: { agent_id, attestation_uid? (optional — revokes all if omitted), reason }
+ * Auth: X-Agent-Signature (must be agent owner)
+ */
+async function handleRevoke(req: IncomingMessage, res: ServerResponse) {
+  const body = await parseBody(req);
+  const { agent_id, attestation_uid, reason } = body;
+
+  if (!agent_id) {
+    return jsonResponse(res, 400, {
+      error: "MISSING_FIELDS",
+      details: "Required: agent_id. Optional: attestation_uid, reason",
+    });
+  }
+
+  // TODO: Verify EIP-712 signature (must be agent wallet owner)
+  // TODO: Call AASRegistry.revokeAttestation() on-chain
+
+  console.log(
+    `[API] Revocation request for agent ${agent_id}${attestation_uid ? ` (UID: ${attestation_uid})` : " (ALL)"}`
+  );
+
+  jsonResponse(res, 200, {
+    status: "REVOCATION_SUBMITTED",
+    agent_id,
+    attestation_uid: attestation_uid || "ALL",
+    reason: reason || "Not specified",
+    message:
+      "Revocation processing — calls EAS.revoke() on-chain for immediate trust invalidation",
+  });
+}
+
 // ─── Router ──────────────────────────────────────────────────────
 
 async function handleRequest(req: IncomingMessage, res: ServerResponse) {
   // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Agent-Signature");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, X-Agent-Signature"
+  );
 
   if (req.method === "OPTIONS") {
     res.writeHead(204);
@@ -171,12 +266,18 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
       return await handleEndorse(req, res);
     }
 
+    // POST /api/v1/revoke
+    if (req.method === "POST" && pathname === "/api/v1/revoke") {
+      return await handleRevoke(req, res);
+    }
+
     // GET /api/v1/health
     if (req.method === "GET" && pathname === "/api/v1/health") {
       return jsonResponse(res, 200, {
         status: "ok",
         service: "Agent Attestation Service",
-        version: "1.0.0-mvp",
+        version: "2.0.0-mvp",
+        tier_system: "STANDARD / VERIFIED",
         timestamp: new Date().toISOString(),
       });
     }
@@ -194,12 +295,13 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
 const server = createServer(handleRequest);
 
 server.listen(PORT, () => {
-  console.log(`\n🔷 Agent Attestation Service API`);
+  console.log(`\n🔷 Agent Attestation Service API (v2 — Two-Tier)`);
   console.log(`   Running on http://localhost:${PORT}`);
   console.log(`   Endpoints:`);
-  console.log(`     POST /api/v1/attest`);
-  console.log(`     GET  /api/v1/verify/:agentId`);
-  console.log(`     GET  /api/v1/reputation/:agentId`);
-  console.log(`     POST /api/v1/endorse`);
-  console.log(`     GET  /api/v1/health\n`);
+  console.log(`     POST /api/v1/attest          — Attestation issuance (STANDARD | VERIFIED)`);
+  console.log(`     GET  /api/v1/verify/:agentId — Verify (min_tier, max_age_days, include_expired)`);
+  console.log(`     GET  /api/v1/reputation/:agentId — Reputation graph query`);
+  console.log(`     POST /api/v1/endorse         — Submit endorsement`);
+  console.log(`     POST /api/v1/revoke          — Revoke attestation(s)`);
+  console.log(`     GET  /api/v1/health          — Health check\n`);
 });
