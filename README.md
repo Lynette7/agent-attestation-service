@@ -66,9 +66,13 @@ aas/
 │   │   └── IAASZKVerifier.sol
 │   └── verifiers/
 │       └── HonkVerifier.sol # Auto-generated from Barretenberg (bb)
-├── test/                    # Hardhat test suite
+│   └── mocks/               # EAS + SchemaRegistry mocks for local testing
+│       ├── EASMock.sol
+│       └── SchemaRegistryMock.sol
+├── test/                    # Hardhat test suite (60 tests)
 │   ├── AASRegistry.test.ts  # 31 unit tests (two-tier registry + verifier)
-│   └── E2EProof.test.ts     # 4 E2E tests (real UltraHonk proofs on-chain)
+│   ├── E2EProof.test.ts     # 4 E2E tests (real UltraHonk proofs on-chain)
+│   └── E2EIntegration.test.ts # 25 integration tests (full Day 4 flow)
 ├── scripts/
 │   ├── deploy/deploy.ts       # Dev-mode deployment (no verifier)
 │   ├── deploy/deployAndWire.ts # Production deployment (HonkVerifier wired)
@@ -84,7 +88,7 @@ aas/
 │       ├── src/main.nr      # Capability threshold proof circuit (both tiers)
 │       └── target/          # Compiled artifacts (VK, proof, HonkVerifier.sol)
 ├── api/                     # REST API + mock services
-│   ├── server.ts            # AAS API server (tier-aware)
+│   ├── server.ts            # AAS API server (fully wired to blockchain)
 │   └── mockPerformanceAPI.ts # Mock agent platform API for Confidential HTTP
 ├── frontend/                # Next.js dashboard (Sprint 2)
 ├── hardhat.config.ts
@@ -154,12 +158,13 @@ npm run register-schemas:sepolia
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
-| `POST` | `/api/v1/attest` | Trigger attestation issuance (body: `{ agent_id, tier: 'STANDARD' \| 'VERIFIED' }`) |
-| `GET` | `/api/v1/verify/:agentId` | Verify attestation (query: `min_tier`, `max_age_days`, `include_expired`) |
-| `GET` | `/api/v1/reputation/:agentId` | Query reputation graph |
-| `POST` | `/api/v1/endorse` | Submit endorsement |
-| `POST` | `/api/v1/revoke` | Revoke attestation(s) (body: `{ agent_id, attestation_uid?, reason }`) |
-| `GET` | `/api/v1/health` | Health check |
+| `POST` | `/api/v1/register` | Register agent on-chain (body: `{ wallet_address }`) |
+| `POST` | `/api/v1/attest` | **E2E attestation**: fetch perf → eligibility → ZK proof → on-chain (body: `{ agent_id, tier }`) |
+| `GET` | `/api/v1/verify/:agentId` | **On-chain verification** with tier/expiry/revocation filtering (query: `min_tier`, `max_age_days`, `include_expired`) |
+| `GET` | `/api/v1/reputation/:agentId` | Query reputation graph (on-chain attestation summary) |
+| `POST` | `/api/v1/endorse` | On-chain endorsement via EAS (body: `{ endorser_agent_id, endorsed_agent_id, endorsement_type, context }`) |
+| `POST` | `/api/v1/revoke` | On-chain revocation (body: `{ agent_id, attestation_uid, reason }`) |
+| `GET` | `/api/v1/health` | Health check (shows blockchain connection status) |
 
 ## Smart Contracts
 
@@ -209,7 +214,7 @@ The Noir circuit proves: _"This agent completed ≥ N tasks with ≥ P% success 
 
 ### Agent Lifecycle
 
-```
+```bash
 Day 0:   Agent registers → UNATTESTED (no work delegation)
 Day 10:  10+ tasks at 80% → STANDARD attestation (never expires, low-risk work)
 Day 90:  120 tasks at 96% → VERIFIED attestation (90-day expiry, production work)
@@ -236,8 +241,8 @@ GET /api/v1/verify/0xABC123?include_expired=true
 - [x] **Day 1 (Feb 17):** EAS schemas, contract deployment, CRE workflow structure, 23 tests passing
 - [x] **Day 2 (Feb 18):** Noir circuit compilation, UltraHonk proof generation, Solidity verifier integration, E2E proof verification (27 tests)
 - [x] **Day 3 (Feb 19):** Two-tier system (STANDARD/VERIFIED), expiry management, revocation, tier-aware Workflow A + B, Confidential HTTP mock API, 35 tests passing
-- [ ] **Day 4 (Feb 20):** End-to-end: trigger → Confidential HTTP → prove → tier attestation
-- [ ] **Days 5-9:** REST API wiring, frontend dashboard with tier badges + expiry countdown, agent-to-agent demo
+- [x] **Day 4 (Feb 20):** End-to-end wiring: API → mock perf API → eligibility → ZK proof → on-chain EAS attestation, on-chain verification/revocation/endorsement, EAS mock contracts, 25 integration tests (60 total)
+- [ ] **Days 5-9:** Frontend dashboard with tier badges + expiry countdown, agent-to-agent demo
 - [ ] **Days 10-12:** Demo video, submission, polish
 
 ## License

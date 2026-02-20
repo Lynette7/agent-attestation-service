@@ -1,5 +1,6 @@
 import { ethers } from "hardhat";
 import * as dotenv from "dotenv";
+import type { Contract } from "ethers";
 
 dotenv.config();
 
@@ -46,7 +47,7 @@ function computeSchemaUID(
  * Returns the schema UID whether newly registered or pre-existing.
  */
 async function registerIfNeeded(
-  schemaRegistry: ethers.Contract,
+  schemaRegistry: Contract,
   name: string,
   schema: string,
   resolver: string,

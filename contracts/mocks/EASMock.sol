@@ -95,7 +95,7 @@ contract EASMock is IEAS {
     function multiTimestamp(bytes32[] calldata) external pure returns (uint64) {
         return 0;
     }
-    function getSchemaRegistry() external view returns (ISchemaRegistry) {
+    function getSchemaRegistry() external pure returns (ISchemaRegistry) {
         return ISchemaRegistry(address(0));
     }
 
