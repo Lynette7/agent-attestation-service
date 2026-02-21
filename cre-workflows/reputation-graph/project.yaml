@@ -1,0 +1,5 @@
+name: aas-reputation-graph
+version: 1.0.0
+staging-settings:
+  - name: sepolia
+    rpc-url: https://ethereum-sepolia-rpc.publicnode.com
