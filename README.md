@@ -44,15 +44,16 @@ Agent requests STANDARD or VERIFIED attestation
 
 | Technology | Role |
 | --- | --- |
-| CRE (Chainlink Runtime Environment) | Workflow orchestration backbone |
+| CRE (Chainlink Runtime Environment) | Workflow orchestration backbone (`@chainlink/cre-sdk`) |
 | Ethereum Attestation Service (EAS) | On-chain attestation registry (dual-tier schemas) |
 | Noir (Aztec) + Barretenberg | ZK circuit DSL (UltraHonk proofs) |
 | Solidity 0.8.24 + 0.8.27 | Smart contracts (AASRegistry, AASZKVerifier, HonkVerifier) |
 | Sepolia Testnet | Primary deployment target |
 | Thirdweb SDK | Frontend Web3 connectivity |
 | Next.js 14 | Frontend dashboard |
-| IPFS (web3.storage) | Reputation graph storage |
-| ethers.js v6 | Contract interaction |
+| IPFS (web3.storage) | Reputation graph storage (roadmap) |
+| viem | ABI encoding/decoding in CRE workflows |
+| ethers.js v6 | Contract interaction (API server) |
 | Hardhat | Contract development & testing |
 
 ## Project Structure
@@ -76,12 +77,27 @@ aas/
 ├── scripts/
 │   ├── deploy/deploy.ts       # Dev-mode deployment (no verifier)
 │   ├── deploy/deployAndWire.ts # Production deployment (HonkVerifier wired)
+│   ├── deploy/deployLocal.ts  # One-step local deployment with EAS mocks
 │   ├── eas/registerSchemas.ts  # EAS schema registration (4 schemas, 2 tiers)
 │   └── prover/generateProof.ts # CLI proof generation helper
-├── cre-workflows/           # CRE workflow implementations
-│   ├── attestation-issuance/workflowA.ts    # Workflow A: tier-aware attestation issuance
-│   ├── attestation-verification/workflowB.ts # Workflow B: verification with tier + expiry filters
-│   └── reputation-graph/workflowC.ts        # Workflow C: reputation graph (roadmap)
+├── cre-workflows/           # CRE SDK workflow projects (@chainlink/cre-sdk)
+│   ├── attestation-issuance/   # Workflow A: tier-aware attestation issuance
+│   │   ├── main.ts             #   HTTP trigger → ConfidentialHTTPClient → EVMClient.writeReport
+│   │   ├── project.yaml        #   CRE project config (RPC, chain settings)
+│   │   ├── workflow.yaml       #   Entry point declaration
+│   │   ├── config.staging.json #   Contract addresses & chain selector
+│   │   └── secrets.yaml        #   Vault DON secret declarations
+│   ├── attestation-verification/ # Workflow B: verification with tier + expiry filters
+│   │   ├── main.ts             #   HTTP trigger → EVMClient.callContract (reads)
+│   │   ├── project.yaml
+│   │   ├── workflow.yaml
+│   │   └── config.staging.json
+│   ├── reputation-graph/       # Workflow C: reputation graph (roadmap)
+│   │   ├── main.ts             #   EVM Log trigger → IPFS graph update
+│   │   ├── project.yaml
+│   │   ├── workflow.yaml
+│   │   └── config.staging.json
+│   └── legacy/                 # Pre-SDK workflow implementations (reference)
 ├── circuits/                # Noir ZK circuits
 │   └── capability-threshold/
 │       ├── Nargo.toml
@@ -90,7 +106,19 @@ aas/
 ├── api/                     # REST API + mock services
 │   ├── server.ts            # AAS API server (fully wired to blockchain)
 │   └── mockPerformanceAPI.ts # Mock agent platform API for Confidential HTTP
-├── frontend/                # Next.js dashboard (Sprint 2)
+├── frontend/                # Next.js 14 dashboard
+│   ├── src/
+│   │   ├── app/             # App Router pages
+│   │   │   ├── page.tsx     # Dashboard home (health, tier overview)
+│   │   │   ├── verify/      # Verify Agent (search, filters, verdict)
+│   │   │   ├── attest/      # Request Attestation (tier select, pipeline)
+│   │   │   └── demo/        # Agent-to-Agent interactive demo
+│   │   ├── components/
+│   │   │   ├── layout/      # Sidebar, Header (wallet connect)
+│   │   │   ├── providers/   # ThirdwebProvider wrapper
+│   │   │   └── ui/          # TierBadge, ExpiryCountdown, AttestationCard, etc.
+│   │   └── lib/             # API client, constants, utils
+│   └── .env.local           # NEXT_PUBLIC_API_URL, NEXT_PUBLIC_THIRDWEB_CLIENT_ID
 ├── hardhat.config.ts
 └── .env.example
 ```
@@ -138,6 +166,16 @@ npx ts-node api/mockPerformanceAPI.ts
 ```bash
 npm run api:dev
 # Runs on http://localhost:3001
+```
+
+### Start Frontend Dashboard
+
+```bash
+cd frontend
+npm install
+npm run dev
+# Runs on http://localhost:3000
+# Requires API server running on :3001
 ```
 
 ### Deploy (Local)
@@ -236,13 +274,52 @@ GET /api/v1/verify/0xABC123
 GET /api/v1/verify/0xABC123?include_expired=true
 ```
 
+## CRE Workflow Architecture
+
+All three workflows are built with the official `@chainlink/cre-sdk` and follow the CRE trigger-and-callback pattern:
+
+| Workflow | Trigger | Capabilities | Purpose |
+| --- | --- | --- | --- |
+| **A — Attestation Issuance** | HTTP | ConfidentialHTTPClient, EVMClient (write) | Fetch perf data privately → ZK proof → on-chain attestation |
+| **B — Attestation Verification** | HTTP | EVMClient (read) | Query registry → filter by tier/expiry → verify ZK proof → return verdict |
+| **C — Reputation Graph** _(roadmap)_ | EVM Log | HTTPClient, EVMClient (read/write) | Listen for EAS events → update IPFS graph → commit CID on-chain |
+
+### Simulate Workflows
+
+```bash
+# Install CRE CLI (requires bun)
+curl -fsSL https://bun.sh/install | bash
+bun add -g @chainlink/cre-cli
+
+# Simulate Workflow A
+cd cre-workflows/attestation-issuance
+cre workflow simulate
+
+# Simulate Workflow B
+cd ../attestation-verification
+cre workflow simulate
+```
+
+### CRE SDK Patterns Used
+
+- **Triggers:** `HTTPCapability.trigger()`, `EVMClient.logTrigger()` (Workflow C)
+- **HTTP:** `ConfidentialHTTPClient.sendRequest()` (TEE + Vault DON secrets)
+- **EVM reads:** `EVMClient.callContract()` with viem ABI encoding
+- **EVM writes:** `runtime.report()` → `EVMClient.writeReport()` (signed reports)
+- **Consensus:** `consensusIdenticalAggregation` for deterministic data
+- **Secrets:** `runtime.getSecret()` backed by `secrets.yaml` + Vault DON
+- **Config:** `config.<target>.json` accessed via `runtime.config`
+- **Logging:** `runtime.log()` (not `console.log`)
+
 ## Sprint Plan
 
 - [x] **Day 1 (Feb 17):** EAS schemas, contract deployment, CRE workflow structure, 23 tests passing
 - [x] **Day 2 (Feb 18):** Noir circuit compilation, UltraHonk proof generation, Solidity verifier integration, E2E proof verification (27 tests)
 - [x] **Day 3 (Feb 19):** Two-tier system (STANDARD/VERIFIED), expiry management, revocation, tier-aware Workflow A + B, Confidential HTTP mock API, 35 tests passing
 - [x] **Day 4 (Feb 20):** End-to-end wiring: API → mock perf API → eligibility → ZK proof → on-chain EAS attestation, on-chain verification/revocation/endorsement, EAS mock contracts, 25 integration tests (60 total)
-- [ ] **Days 5-9:** Frontend dashboard with tier badges + expiry countdown, agent-to-agent demo
+- [x] **Day 5 (Feb 21):** Next.js 14 frontend — Dashboard, Verify Agent, Request Attestation, Agent-to-Agent Demo pages; Thirdweb wallet connect; dark theme; TierBadge, ExpiryCountdown, AttestationCard components; API client wired to backend; local deploy script (`deployLocal.ts`)
+- [x] **Day 6 (Feb 22):** CRE SDK compliance audit — rewrote all three workflows to use official `@chainlink/cre-sdk` (HTTPCapability, ConfidentialHTTPClient, EVMClient, runtime.report(), viem ABI encoding); CRE project structure (project.yaml, workflow.yaml, config.staging.json, secrets.yaml); moved legacy implementations to `cre-workflows/legacy/`
+- [ ] **Days 7-9:** Frontend polish, CRE testnet deployment, IPFS reputation graph, end-to-end integration testing
 - [ ] **Days 10-12:** Demo video, submission, polish
 
 ## License

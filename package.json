@@ -6,7 +6,7 @@
   "scripts": {
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",
-    "deploy:local": "npx hardhat run scripts/deploy/deploy.ts --network hardhat",
+    "deploy:local": "npx hardhat run scripts/deploy/deployLocal.ts --network localhost",
     "deploy:sepolia": "npx hardhat run scripts/deploy/deploy.ts --network sepolia",
     "register-schemas:sepolia": "npx hardhat run scripts/eas/registerSchemas.ts --network sepolia",
     "api:dev": "npx ts-node api/server.ts",
@@ -32,6 +32,7 @@
     "typescript": "^5.6.0"
   },
   "dependencies": {
+    "@chainlink/cre-sdk": "^1.1.1",
     "@ethereum-attestation-service/eas-contracts": "^1.7.1",
     "@ethereum-attestation-service/eas-sdk": "^2.7.0",
     "@openzeppelin/contracts": "^5.1.0",
