@@ -10,12 +10,12 @@ const client = createThirdwebClient({
 
 export function Header() {
   return (
-    <header className="h-16 border-b border-[#1e1e2e] bg-[#111118] flex items-center justify-between px-6">
+    <header className="h-16 border-b border-card-border bg-card flex items-center justify-between px-6">
       <div className="flex items-center gap-4">
-        <h2 className="text-sm font-medium text-gray-400">
+        <h2 className="text-sm font-medium text-slate-400">
           Verifiable Trust Layer for AI Agents
         </h2>
-        <span className="px-2 py-0.5 text-[10px] rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+        <span className="px-2 py-0.5 text-[10px] rounded-full bg-cl-green/10 text-cl-green border border-cl-green/20">
           Sepolia
         </span>
       </div>
@@ -31,9 +31,9 @@ export function Header() {
               height: "36px",
               padding: "0 16px",
               borderRadius: "8px",
-              background: "rgba(59, 130, 246, 0.1)",
-              border: "1px solid rgba(59, 130, 246, 0.3)",
-              color: "#93c5fd",
+              background: "rgba(8, 71, 247, 0.1)",
+              border: "1px solid rgba(8, 71, 247, 0.3)",
+              color: "#8AA6F9",
             },
           }}
         />

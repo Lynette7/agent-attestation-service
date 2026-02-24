@@ -25,7 +25,7 @@ export function TierBadge({ tier, size = "md", showIcon = true }: TierBadgeProps
         "inline-flex items-center gap-1.5 font-semibold rounded-full tracking-wider uppercase",
         config.badgeClass,
         sizeClasses[size],
-        tier === "VERIFIED" && "glow-amber",
+        tier === "VERIFIED" && "glow-gold",
         tier === "STANDARD" && "glow-blue"
       )}
     >

@@ -71,15 +71,15 @@ export default function VerifyPage() {
       </div>
 
       {/* Search */}
-      <div className="rounded-xl border border-[#1e1e2e] bg-[#111118] p-6 space-y-4">
+      <div className="rounded-xl border border-card-border bg-card p-6 space-y-4">
         <div className="space-y-2">
-          <label className="text-sm text-gray-400">Agent ID (bytes32 hex)</label>
+          <label className="text-sm text-slate-400">Agent ID (bytes32 hex)</label>
           <input
             type="text"
             value={agentId}
             onChange={(e) => setAgentId(e.target.value)}
             placeholder="0xabcdef1234567890..."
-            className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 font-mono"
+            className="w-full bg-cl-dark border border-card-border rounded-lg px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cl-blue/50 font-mono"
           />
         </div>
 
@@ -106,7 +106,7 @@ export default function VerifyPage() {
             <select
               value={minTier}
               onChange={(e) => setMinTier(e.target.value as TierName | "")}
-              className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/50"
+              className="w-full bg-cl-dark border border-card-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cl-blue/50"
             >
               <option value="">Any</option>
               <option value="STANDARD">STANDARD</option>
@@ -121,7 +121,7 @@ export default function VerifyPage() {
               value={maxAgeDays}
               onChange={(e) => setMaxAgeDays(e.target.value)}
               placeholder="No limit"
-              className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50"
+              className="w-full bg-cl-dark border border-card-border rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cl-blue/50"
             />
           </div>
 
@@ -142,7 +142,7 @@ export default function VerifyPage() {
         <button
           onClick={handleVerify}
           disabled={loading || !agentId.trim()}
-          className="w-full py-3 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400 font-medium hover:bg-blue-500/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full py-3 rounded-lg bg-cl-blue/10 border border-cl-blue/30 text-cl-blue-light font-medium hover:bg-cl-blue/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {loading ? "Verifying..." : "Verify Agent"}
         </button>
@@ -169,18 +169,18 @@ export default function VerifyPage() {
           <div
             className={`rounded-xl border p-6 ${
               verifyResult.verified
-                ? "border-green-500/20 bg-green-500/5 glow-green"
+                ? "border-cl-green/20 bg-cl-green/5 glow-green"
                 : "border-red-500/20 bg-red-500/5"
             }`}
           >
             <div className="flex items-center gap-4">
               <div
                 className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                  verifyResult.verified ? "bg-green-500/20" : "bg-red-500/20"
+                  verifyResult.verified ? "bg-cl-green/20" : "bg-red-500/20"
                 }`}
               >
                 {verifyResult.verified ? (
-                  <svg className="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-6 h-6 text-cl-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 ) : (

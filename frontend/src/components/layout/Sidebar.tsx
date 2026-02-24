@@ -43,22 +43,33 @@ const NAV_ITEMS = [
   },
 ];
 
+/** Chainlink hexagon logo (simplified SVG) */
+function ChainlinkHexIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 37 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18.5 0L37 10.5V31.5L18.5 42L0 31.5V10.5L18.5 0Z" fill="currentColor" />
+      <path d="M18.5 8L28.5 13.5V26.5L18.5 32L8.5 26.5V13.5L18.5 8Z" fill="#0B101C" />
+      <path d="M18.5 14L23.5 16.75V23.25L18.5 26L13.5 23.25V16.75L18.5 14Z" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-[#111118] border-r border-[#1e1e2e] flex flex-col">
-      {/* Logo */}
-      <div className="p-6 border-b border-[#1e1e2e]">
+    <aside className="w-64 bg-card border-r border-card-border flex flex-col">
+      {/* Logo — Chainlink-branded */}
+      <div className="p-6 border-b border-card-border">
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-amber-500 flex items-center justify-center text-white font-bold text-sm">
-            A
+          <div className="w-9 h-9 rounded-lg cl-gradient flex items-center justify-center">
+            <ChainlinkHexIcon className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-white tracking-tight">
+            <h1 className="text-lg font-bold text-white tracking-tight">
               AAS
             </h1>
-            <p className="text-[10px] text-gray-500 tracking-wider uppercase">
+            <p className="text-[10px] text-slate-500 tracking-widest uppercase">
               Agent Attestation
             </p>
           </div>
@@ -76,8 +87,8 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
                 isActive
-                  ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-white/5"
+                  ? "bg-cl-blue/10 text-cl-blue-light border border-cl-blue/20"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
               )}
             >
               {item.icon}
@@ -87,12 +98,24 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-[#1e1e2e]">
-        <div className="text-[11px] text-gray-600 space-y-1">
-          <p>Powered by CRE + EAS</p>
-          <p>UltraHonk ZK Proofs</p>
+      {/* Footer — Built with Chainlink */}
+      <div className="p-4 border-t border-card-border space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-slate-600 uppercase tracking-wider">Built on</span>
         </div>
+        <div className="flex flex-wrap gap-1.5">
+          {["CRE", "EAS", "UltraHonk", "Noir"].map((tech) => (
+            <span
+              key={tech}
+              className="px-2 py-0.5 text-[10px] rounded-md bg-cl-blue/5 text-cl-blue-light/60 border border-cl-blue/10"
+            >
+              {tech}
+            </span>
+          ))}
+        </div>
+        <p className="text-[10px] text-slate-700">
+          Convergence Hackathon 2026
+        </p>
       </div>
     </aside>
   );

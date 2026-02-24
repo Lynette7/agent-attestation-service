@@ -1,12 +1,17 @@
-/** Shared constants for the AAS frontend */
+/**
+ * Shared constants for the AAS frontend
+ * Colors aligned with official Chainlink brand:
+ *   - STANDARD tier: Chainlink Blue (#0847F7)
+ *   - VERIFIED tier: Chainlink Yellow (#F7B808)
+ */
 
 export const TIER_CONFIG = {
   STANDARD: {
     label: "STANDARD",
     color: "blue",
-    bgClass: "bg-blue-500/10 border-blue-500/30 text-blue-400",
-    badgeClass: "bg-blue-500/20 text-blue-300 border border-blue-500/40",
-    dotClass: "bg-blue-400",
+    bgClass: "bg-cl-blue/10 border-cl-blue/30 text-cl-blue-light",
+    badgeClass: "bg-cl-blue/20 text-cl-blue-light border border-cl-blue/40",
+    dotClass: "bg-cl-blue",
     taskThreshold: 10,
     rateThreshold: 70,
     rateBps: 7000,
@@ -14,10 +19,10 @@ export const TIER_CONFIG = {
   },
   VERIFIED: {
     label: "VERIFIED",
-    color: "amber",
-    bgClass: "bg-amber-500/10 border-amber-500/30 text-amber-400",
-    badgeClass: "bg-amber-500/20 text-amber-300 border border-amber-500/40",
-    dotClass: "bg-amber-400",
+    color: "gold",
+    bgClass: "bg-cl-yellow/10 border-cl-yellow/30 text-cl-yellow",
+    badgeClass: "bg-cl-yellow/20 text-cl-yellow border border-cl-yellow/40",
+    dotClass: "bg-cl-yellow",
     taskThreshold: 100,
     rateThreshold: 95,
     rateBps: 9500,

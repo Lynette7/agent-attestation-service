@@ -155,8 +155,8 @@ export default function DemoPage() {
   }
 
   const actorColors = {
-    A: "text-blue-400",
-    B: "text-amber-400",
+    A: "text-cl-blue-light",
+    B: "text-cl-yellow",
     system: "text-gray-500",
   };
 
@@ -168,7 +168,7 @@ export default function DemoPage() {
 
   const typeStyles = {
     info: "text-gray-400",
-    success: "text-green-400",
+    success: "text-cl-green",
     error: "text-red-400",
     action: "text-white",
   };
@@ -188,9 +188,9 @@ export default function DemoPage() {
 
       {/* Agent Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-5 space-y-3">
+        <div className="rounded-xl border border-cl-blue/20 bg-cl-blue/5 p-5 space-y-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold">
+            <div className="w-10 h-10 rounded-full bg-cl-blue/20 flex items-center justify-center text-cl-blue-light font-bold">
               A
             </div>
             <div>
@@ -206,9 +206,9 @@ export default function DemoPage() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 space-y-3">
+        <div className="rounded-xl border border-cl-yellow/20 bg-cl-yellow/5 p-5 space-y-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 font-bold">
+            <div className="w-10 h-10 rounded-full bg-cl-yellow/20 flex items-center justify-center text-cl-yellow font-bold">
               B
             </div>
             <div>
@@ -229,7 +229,7 @@ export default function DemoPage() {
       <button
         onClick={runDemo}
         disabled={running}
-        className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-amber-500/10 border border-gray-700 text-white font-medium hover:from-blue-500/20 hover:to-amber-500/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full py-4 rounded-xl bg-gradient-to-r from-cl-blue/10 to-cl-yellow/10 border border-gray-700 text-white font-medium hover:from-cl-blue/20 hover:to-cl-yellow/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {running ? (
           <span className="flex items-center justify-center gap-3">
@@ -243,14 +243,14 @@ export default function DemoPage() {
 
       {/* Phase Indicator */}
       {phase && (
-        <div className="rounded-lg border border-purple-500/20 bg-purple-500/5 px-4 py-2">
-          <p className="text-sm text-purple-400 font-medium">{phase}</p>
+        <div className="rounded-lg border border-cl-purple/20 bg-cl-purple/5 px-4 py-2">
+          <p className="text-sm text-cl-purple font-medium">{phase}</p>
         </div>
       )}
 
       {/* Log Output */}
       {logs.length > 0 && (
-        <div className="rounded-xl border border-[#1e1e2e] bg-[#0a0a0f] p-4 space-y-1.5 font-mono text-sm max-h-96 overflow-y-auto">
+        <div className="rounded-xl border border-card-border bg-cl-dark p-4 space-y-1.5 font-mono text-sm max-h-96 overflow-y-auto">
           {logs.map((log, i) => (
             <div key={i} className="flex gap-3">
               <span className="text-gray-600 flex-shrink-0 w-20">
@@ -272,18 +272,18 @@ export default function DemoPage() {
         <div
           className={`rounded-xl border p-6 ${
             result === "accepted"
-              ? "border-green-500/20 bg-green-500/5 glow-green"
+              ? "border-cl-green/20 bg-cl-green/5 glow-green"
               : "border-red-500/20 bg-red-500/5"
           }`}
         >
           <div className="flex items-center gap-4">
             <div
               className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                result === "accepted" ? "bg-green-500/20" : "bg-red-500/20"
+                result === "accepted" ? "bg-cl-green/20" : "bg-red-500/20"
               }`}
             >
               {result === "accepted" ? (
-                <svg className="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-6 h-6 text-cl-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               ) : (
@@ -309,34 +309,34 @@ export default function DemoPage() {
       )}
 
       {/* Explanation */}
-      <div className="rounded-xl border border-[#1e1e2e] bg-[#111118] p-6 space-y-3">
-        <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+      <div className="rounded-xl border border-card-border bg-card p-6 space-y-3">
+        <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">
           What This Demonstrates
         </h3>
         <ul className="space-y-2 text-sm text-gray-400">
           <li className="flex items-start gap-2">
-            <span className="text-blue-400 mt-1">1.</span>
+            <span className="text-cl-blue-light mt-1">1.</span>
             <span>
               Agent A earns a STANDARD attestation via the full pipeline:
               performance fetch → eligibility check → ZK proof → EAS on-chain
             </span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-amber-400 mt-1">2.</span>
+            <span className="text-cl-yellow mt-1">2.</span>
             <span>
               Agent B queries Agent A&apos;s on-chain attestations, filtering by
               tier and checking for revocation/expiry
             </span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-green-400 mt-1">3.</span>
+            <span className="text-cl-green mt-1">3.</span>
             <span>
               Trust is established cryptographically — no raw data shared, no
               central authority needed
             </span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-purple-400 mt-1">4.</span>
+            <span className="text-cl-purple mt-1">4.</span>
             <span>
               Agent B submits an on-chain endorsement after successful
               collaboration

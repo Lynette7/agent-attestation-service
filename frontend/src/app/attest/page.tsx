@@ -74,15 +74,15 @@ export default function AttestPage() {
       </div>
 
       {/* Form */}
-      <div className="rounded-xl border border-[#1e1e2e] bg-[#111118] p-6 space-y-6">
+      <div className="rounded-xl border border-card-border bg-card p-6 space-y-6">
         <div className="space-y-2">
-          <label className="text-sm text-gray-400">Agent ID (bytes32 hex)</label>
+          <label className="text-sm text-slate-400">Agent ID (bytes32 hex)</label>
           <input
             type="text"
             value={agentId}
             onChange={(e) => setAgentId(e.target.value)}
             placeholder="0x..."
-            className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 font-mono"
+            className="w-full bg-cl-dark border border-card-border rounded-lg px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cl-blue/50 font-mono"
           />
         </div>
 
@@ -100,8 +100,8 @@ export default function AttestPage() {
                   className={`rounded-xl border p-4 text-left transition-all ${
                     selected
                       ? config.bgClass + " ring-1 ring-offset-0 " +
-                        (t === "STANDARD" ? "ring-blue-500/50" : "ring-amber-500/50")
-                      : "border-[#1e1e2e] bg-[#0a0a0f] hover:border-gray-700"
+                        (t === "STANDARD" ? "ring-cl-blue/50" : "ring-cl-yellow/50")
+                      : "border-card-border bg-cl-dark hover:border-gray-700"
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-2">
@@ -130,8 +130,8 @@ export default function AttestPage() {
           disabled={loading || !agentId.trim()}
           className={`w-full py-3 rounded-lg font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
             tier === "VERIFIED"
-              ? "bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
-              : "bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
+              ? "bg-cl-yellow/10 border border-cl-yellow/30 text-cl-yellow hover:bg-cl-yellow/20"
+              : "bg-cl-blue/10 border border-cl-blue/30 text-cl-blue-light hover:bg-cl-blue/20"
           }`}
         >
           {loading ? "Processing..." : `Request ${tier} Attestation`}
@@ -140,8 +140,8 @@ export default function AttestPage() {
 
       {/* Progress Steps */}
       {steps.length > 0 && (
-        <div className="rounded-xl border border-[#1e1e2e] bg-[#111118] p-6 space-y-4">
-          <h3 className="text-sm font-medium text-gray-400">
+        <div className="rounded-xl border border-card-border bg-card p-6 space-y-4">
+          <h3 className="text-sm font-medium text-slate-400">
             Attestation Pipeline
           </h3>
           <div className="space-y-3">
@@ -149,7 +149,7 @@ export default function AttestPage() {
               <div key={i} className="flex items-center gap-3">
                 {step.status === "done" && (
                   <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="w-3.5 h-3.5 text-cl-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
@@ -173,7 +173,7 @@ export default function AttestPage() {
                   <p
                     className={`text-sm ${
                       step.status === "done"
-                        ? "text-green-400"
+                        ? "text-cl-green"
                         : step.status === "active"
                         ? "text-white"
                         : step.status === "error"
@@ -197,10 +197,10 @@ export default function AttestPage() {
 
       {/* Result */}
       {result && (
-        <div className="rounded-xl border border-green-500/20 bg-green-500/5 glow-green p-6 space-y-4">
+        <div className="rounded-xl border border-cl-green/20 bg-cl-green/5 glow-green p-6 space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-              <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="w-10 h-10 rounded-full bg-cl-green/20 flex items-center justify-center">
+              <svg className="w-5 h-5 text-cl-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>

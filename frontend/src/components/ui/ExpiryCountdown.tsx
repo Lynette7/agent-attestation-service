@@ -22,7 +22,7 @@ export function ExpiryCountdown({ expiresAt }: ExpiryCountdownProps) {
 
   if (!expiresAt || expiresAt === 0) {
     return (
-      <div className="flex items-center gap-2 text-sm text-green-400">
+      <div className="flex items-center gap-2 text-sm text-cl-green">
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
@@ -52,15 +52,15 @@ export function ExpiryCountdown({ expiresAt }: ExpiryCountdownProps) {
     expiry.days < 7
       ? "text-red-400"
       : expiry.days < 30
-      ? "text-amber-400"
-      : "text-green-400";
+      ? "text-cl-yellow"
+      : "text-cl-green";
 
   const barColor =
     expiry.days < 7
       ? "bg-red-500"
       : expiry.days < 30
-      ? "bg-amber-500"
-      : "bg-green-500";
+      ? "bg-cl-yellow"
+      : "bg-cl-green";
 
   return (
     <div className="space-y-1.5">

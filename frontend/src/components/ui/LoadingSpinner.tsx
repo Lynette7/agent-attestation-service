@@ -16,7 +16,7 @@ export function LoadingSpinner({ size = "md", label }: LoadingSpinnerProps) {
     <div className="flex flex-col items-center gap-3">
       <div
         className={cn(
-          "rounded-full border-gray-700 border-t-blue-500 animate-spin",
+          "rounded-full border-gray-700 border-t-cl-blue animate-spin",
           sizeClasses[size]
         )}
       />

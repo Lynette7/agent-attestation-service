@@ -1,25 +1,29 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { ThirdwebProvider } from "@/components/providers/ThirdwebProvider";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
+// Chainlink brand fonts: Inter for body/interface
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 });
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "AAS — Agent Attestation Service",
   description:
-    "Verifiable reputation & trust layer for autonomous AI agents. Two-tier attestation system powered by CRE, EAS, and UltraHonk ZK proofs.",
+    "Verifiable reputation & trust layer for autonomous AI agents. Two-tier attestation system powered by Chainlink CRE, EAS, and UltraHonk ZK proofs.",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
@@ -30,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <ThirdwebProvider>
           <div className="flex h-screen overflow-hidden">

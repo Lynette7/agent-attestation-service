@@ -8,17 +8,17 @@ interface StatCardProps {
 }
 
 const colorClasses = {
-  blue: "border-blue-500/20 bg-blue-500/5",
-  amber: "border-amber-500/20 bg-amber-500/5",
-  green: "border-green-500/20 bg-green-500/5",
+  blue: "border-cl-blue/20 bg-cl-blue/5",
+  amber: "border-cl-yellow/20 bg-cl-yellow/5",
+  green: "border-cl-green/20 bg-cl-green/5",
   red: "border-red-500/20 bg-red-500/5",
   gray: "border-gray-700 bg-gray-800/50",
 };
 
 const valueColorClasses = {
-  blue: "text-blue-400",
-  amber: "text-amber-400",
-  green: "text-green-400",
+  blue: "text-cl-blue-light",
+  amber: "text-cl-yellow",
+  green: "text-cl-green",
   red: "text-red-400",
   gray: "text-gray-300",
 };

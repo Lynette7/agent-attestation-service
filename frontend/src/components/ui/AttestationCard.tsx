@@ -40,8 +40,8 @@ export function AttestationCard({
         revoked
           ? "border-red-500/20 bg-red-500/5 opacity-60"
           : isVerified
-          ? "border-amber-500/20 bg-amber-500/5 glow-amber"
-          : "border-blue-500/20 bg-blue-500/5 glow-blue"
+          ? "border-cl-yellow/20 bg-cl-yellow/5 glow-gold"
+          : "border-cl-blue/20 bg-cl-blue/5 glow-blue"
       }`}
     >
       {/* Header */}
