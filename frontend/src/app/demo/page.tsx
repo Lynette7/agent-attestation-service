@@ -252,16 +252,16 @@ export default function DemoPage() {
       {logs.length > 0 && (
         <div className="rounded-xl border border-card-border bg-cl-dark p-4 space-y-1.5 font-mono text-sm max-h-96 overflow-y-auto">
           {logs.map((log, i) => (
-            <div key={i} className="flex gap-3">
-              <span className="text-gray-600 flex-shrink-0 w-20">
+            <div key={i} className="flex gap-2">
+              <span className="text-gray-600 flex-shrink-0 hidden sm:inline sm:w-20">
                 {log.timestamp}
               </span>
               <span
-                className={`flex-shrink-0 w-20 font-semibold ${actorColors[log.actor]}`}
+                className={`flex-shrink-0 sm:w-20 font-semibold ${actorColors[log.actor]}`}
               >
                 [{actorLabels[log.actor]}]
               </span>
-              <span className={typeStyles[log.type]}>{log.message}</span>
+              <span className={`${typeStyles[log.type]} min-w-0 break-words`}>{log.message}</span>
             </div>
           ))}
         </div>

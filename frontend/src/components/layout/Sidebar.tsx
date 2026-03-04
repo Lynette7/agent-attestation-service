@@ -54,26 +54,47 @@ function ChainlinkHexIcon({ className }: { className?: string }) {
   );
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-card border-r border-card-border flex flex-col">
-      {/* Logo — Chainlink-branded */}
-      <div className="p-6 border-b border-card-border">
-        <Link href="/" className="flex items-center gap-3">
+    <aside
+      className={cn(
+        "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-card-border flex flex-col",
+        "transition-transform duration-300 ease-in-out",
+        "lg:relative lg:z-auto lg:translate-x-0",
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      )}
+    >
+      {/* Logo */}
+      <div className="p-6 border-b border-card-border flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-3" onClick={onClose}>
           <div className="w-9 h-9 rounded-lg cl-gradient flex items-center justify-center">
             <ChainlinkHexIcon className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white tracking-tight">
-              AAS
-            </h1>
+            <h1 className="text-lg font-bold text-white tracking-tight">AAS</h1>
             <p className="text-[10px] text-slate-500 tracking-widest uppercase">
               Agent Attestation
             </p>
           </div>
         </Link>
+
+        {/* Close button — mobile only */}
+        <button
+          onClick={onClose}
+          className="lg:hidden p-1.5 rounded-md text-gray-500 hover:text-white hover:bg-white/5 transition-colors"
+          aria-label="Close menu"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
       {/* Navigation */}
@@ -84,6 +105,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
                 isActive
@@ -98,7 +120,7 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Footer — Built with Chainlink */}
+      {/* Footer */}
       <div className="p-4 border-t border-card-border space-y-3">
         <div className="flex items-center gap-2">
           <span className="text-[10px] text-slate-600 uppercase tracking-wider">Built on</span>
@@ -113,9 +135,7 @@ export function Sidebar() {
             </span>
           ))}
         </div>
-        <p className="text-[10px] text-slate-700">
-          Convergence Hackathon 2026
-        </p>
+        <p className="text-[10px] text-slate-700">Convergence Hackathon 2026</p>
       </div>
     </aside>
   );
