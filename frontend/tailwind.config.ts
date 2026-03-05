@@ -16,27 +16,37 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        muted: "var(--muted)",
         // Chainlink Brand — Primary
         "cl-blue": {
           DEFAULT: "#0847F7",
-          light: "#8AA6F9",
-          muted: "#1e3a8a",
+          light: "var(--cl-blue-light)",
+          muted: "var(--cl-blue-muted)",
           50: "#eff4ff",
         },
-        "cl-dark": "#0B101C",
+        "cl-dark": "var(--cl-dark)",
         // Chainlink Brand — Secondary
-        "cl-green": "#217B71",
+        "cl-green": "var(--cl-green)",
         "cl-orange": "#E54918",
         "cl-yellow": {
-          DEFAULT: "#F7B808",
+          DEFAULT: "var(--cl-yellow)",
           light: "#FCD34D",
         },
-        "cl-purple": "#4A21C2",
+        "cl-purple": "var(--cl-purple)",
         // Card system
         card: {
-          DEFAULT: "#111827",
-          border: "#1e293b",
+          DEFAULT: "var(--card)",
+          border: "var(--card-border)",
+          hover: "var(--card-hover)",
         },
+        // Sidebar
+        sidebar: {
+          DEFAULT: "var(--sidebar-bg)",
+          border: "var(--sidebar-border)",
+        },
+        // Input
+        "input-bg": "var(--input-bg)",
+        "input-border": "var(--input-border)",
       },
     },
   },

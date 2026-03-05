@@ -2,112 +2,120 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Chainlink Brand System ─────────────────────────────────────
- * Official colors from https://chain.link/brand-assets
- * Primary:   Chainlink Blue #0847F7, Dark #0B101C, Light Blue #8AA6F9
- * Secondary: Green #217B71, Orange #E54918, Yellow #F7B808, Purple #4A21C2
- * Fonts:     Inter (body), system headings
- */
+/* ─── Chainlink Brand System ──────────────────────────────────────── */
 
 :root {
-  /* Backgrounds */
-  --background: #0B101C;
-  --foreground: #e2e8f0;
-  --card: #111827;
-  --card-border: #1e293b;
+  /* Light mode */
+  --background: #EFF2F8;
+  --foreground: #0F1525;
+  --card: #FFFFFF;
+  --card-border: #DDE4EF;
+  --card-hover: #E6ECF8;
+  --sidebar-bg: #FFFFFF;
+  --sidebar-border: #DDE4EF;
 
-  /* Chainlink Primary */
   --cl-blue: #0847F7;
-  --cl-blue-light: #8AA6F9;
-  --cl-blue-muted: #1e3a8a;
-  --cl-dark: #0B101C;
-
-  /* Chainlink Secondary */
-  --cl-green: #217B71;
+  --cl-blue-light: #2558F0;
+  --cl-blue-muted: #EEF2FF;
+  --cl-dark: #EFF2F8;
+  --cl-green: #0E9E8B;
   --cl-orange: #E54918;
-  --cl-yellow: #F7B808;
-  --cl-purple: #4A21C2;
+  --cl-yellow: #C9960A;
+  --cl-purple: #5B35D5;
 
-  /* Semantic */
-  --muted: #64748b;
-  --accent-blue: #0847F7;
-  --accent-gold: #F7B808;
-  --accent-green: #217B71;
-  --accent-red: #E54918;
+  --muted: #6A7A94;
+  --input-bg: #F5F8FC;
+  --input-border: #D8E2EE;
+}
+
+.dark {
+  /* Deep dark — tuned to match design */
+  --background: #050815;
+  --foreground: #E9F0FF;
+  --card: #0B1220;
+  --card-border: #1C2D44;
+  --card-hover: #111A2E;
+  --sidebar-bg: #050815;
+  --sidebar-border: #1A2338;
+
+  --cl-blue: #0847F7;
+  --cl-blue-light: #7BA5FF;
+  --cl-blue-muted: #1E3A8A;
+  --cl-dark: #0C0F1A;
+  --cl-green: #13C4AB;
+  --cl-orange: #F26B45;
+  --cl-yellow: #F9CA20;
+  --cl-purple: #7C5CFC;
+
+  --muted: #7E8CA5;
+  --input-bg: #050815;
+  --input-border: #1C2D44;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  font-size: 16px;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
+/* ─── Scrollbar ───────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ─── Card shadow ─────────────────────────────────────────────────── */
+.card-shadow {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
 }
-::-webkit-scrollbar-track {
-  background: var(--background);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--card-border);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+.dark .card-shadow {
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5), 0 4px 24px rgba(0,0,0,0.35);
 }
 
-/* ─── Glow Effects (Chainlink brand colors) ──────────────────── */
-.glow-blue {
-  box-shadow: 0 0 24px rgba(8, 71, 247, 0.15), 0 0 48px rgba(8, 71, 247, 0.05);
-}
-.glow-gold {
-  box-shadow: 0 0 24px rgba(247, 184, 8, 0.15), 0 0 48px rgba(247, 184, 8, 0.05);
-}
-.glow-green {
-  box-shadow: 0 0 24px rgba(33, 123, 113, 0.2), 0 0 48px rgba(33, 123, 113, 0.05);
-}
-.glow-purple {
-  box-shadow: 0 0 24px rgba(74, 33, 194, 0.15), 0 0 48px rgba(74, 33, 194, 0.05);
-}
+/* ─── Glows ───────────────────────────────────────────────────────── */
+.glow-blue   { box-shadow: 0 0 28px rgba(8,71,247,0.18),   0 0 56px rgba(8,71,247,0.06); }
+.glow-gold   { box-shadow: 0 0 28px rgba(249,202,32,0.18), 0 0 56px rgba(249,202,32,0.06); }
+.glow-green  { box-shadow: 0 0 28px rgba(19,196,171,0.18), 0 0 56px rgba(19,196,171,0.06); }
+.glow-purple { box-shadow: 0 0 28px rgba(124,92,252,0.18), 0 0 56px rgba(124,92,252,0.06); }
+.glow-amber  { box-shadow: 0 0 28px rgba(249,202,32,0.18), 0 0 56px rgba(249,202,32,0.06); }
 
-/* Legacy alias */
-.glow-amber {
-  box-shadow: 0 0 24px rgba(247, 184, 8, 0.15), 0 0 48px rgba(247, 184, 8, 0.05);
-}
-
-/* ─── Chainlink Gradient ─────────────────────────────────────── */
+/* ─── Gradients ───────────────────────────────────────────────────── */
 .cl-gradient {
-  background: linear-gradient(135deg, #0847F7 0%, #4A21C2 50%, #8AA6F9 100%);
+  background: linear-gradient(135deg, #0847F7 0%, #4A21C2 60%, #7BA5FF 100%);
 }
 .cl-gradient-text {
-  background: linear-gradient(135deg, #0847F7 0%, #8AA6F9 100%);
+  background: linear-gradient(135deg, #0847F7 0%, #7BA5FF 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 .cl-gradient-gold {
-  background: linear-gradient(135deg, #F7B808 0%, #E54918 100%);
+  background: linear-gradient(135deg, #F9CA20 0%, #F26B45 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* ─── Animations ─────────────────────────────────────────────── */
-@keyframes pulse-slow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+/* ─── Input base ──────────────────────────────────────────────────── */
+.input-base {
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--foreground);
 }
-.animate-pulse-slow {
-  animation: pulse-slow 3s ease-in-out infinite;
-}
+.input-base::placeholder { color: var(--muted); }
+.input-base:focus { border-color: var(--cl-blue); outline: none; }
+
+/* ─── Animations ──────────────────────────────────────────────────── */
+@keyframes pulse-slow { 0%,100%{opacity:1} 50%{opacity:.7} }
+.animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
 
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 .animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(8, 71, 247, 0.05), transparent);
+  background: linear-gradient(90deg, transparent, rgba(8,71,247,0.05), transparent);
   background-size: 200% 100%;
   animation: shimmer 3s ease-in-out infinite;
 }

@@ -4,7 +4,6 @@ import "./globals.css";
 import { AppShell } from "@/components/layout/AppShell";
 import { ThirdwebProvider } from "@/components/providers/ThirdwebProvider";
 
-// Chainlink brand fonts: Inter for body/interface
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
@@ -25,6 +24,20 @@ export const metadata: Metadata = {
   },
 };
 
+// Inline script runs before hydration to prevent flash-of-wrong-theme
+const themeScript = `
+try {
+  var t = localStorage.getItem('theme');
+  if (t === 'light') {
+    document.documentElement.classList.remove('dark');
+  } else {
+    document.documentElement.classList.add('dark');
+  }
+} catch(e) {
+  document.documentElement.classList.add('dark');
+}
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -32,6 +45,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
