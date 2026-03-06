@@ -106,7 +106,7 @@ export default function AttestPage() {
                     selected
                       ? "border-[#00727F] bg-card text-foreground"
                       : "border-card-border bg-card text-muted"
-                  } hover:border-[#00727F] hover:bg-[#0C1824] hover:text-[#ECF6FF]`}
+                  } dark:hover:border-[#00727F] dark:hover:bg-[#0C1824] dark:hover:text-[#ECF6FF]`}
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <TierBadge tier={t} size="sm" />
@@ -131,7 +131,7 @@ export default function AttestPage() {
         <button
           onClick={handleAttest}
           disabled={loading || !agentId.trim()}
-          className="w-full py-3 rounded-lg font-semibold text-sm md:text-[15px] tracking-wide transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-[#00C2FF] text-[#021019] hover:bg-[#22D1FF]"
+          className="w-full py-3 rounded-lg font-semibold text-sm md:text-[15px] tracking-wide transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-[#00727F] text-white hover:bg-[#008A99] dark:bg-[#00C2FF] dark:text-[#021019] dark:hover:bg-[#22D1FF]"
         >
           {loading ? "Processing…" : `Request ${tier} Attestation`}
         </button>

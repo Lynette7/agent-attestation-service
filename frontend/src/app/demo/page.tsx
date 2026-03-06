@@ -182,7 +182,7 @@ export default function DemoPage() {
 
       {/* Agent Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="group rounded-2xl border border-card-border bg-card card-shadow p-5 md:p-6 space-y-3 transition-colors duration-150 hover:border-[#00727F] hover:bg-[#0C1824]">
+        <div className="group rounded-2xl border border-card-border bg-card card-shadow p-5 md:p-6 space-y-3 transition-colors duration-150 dark:hover:border-[#00727F] dark:hover:bg-[#0C1824]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#00B3FF] flex items-center justify-center text-[#021019] font-bold text-sm flex-shrink-0">
               A
@@ -201,7 +201,7 @@ export default function DemoPage() {
           </p>
         </div>
 
-        <div className="group rounded-2xl border border-card-border bg-card card-shadow p-5 md:p-6 space-y-3 transition-colors duration-150 hover:border-[#00727F] hover:bg-[#0C1824]">
+        <div className="group rounded-2xl border border-card-border bg-card card-shadow p-5 md:p-6 space-y-3 transition-colors duration-150 dark:hover:border-[#00727F] dark:hover:bg-[#0C1824]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#FF4B81] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
               B
@@ -225,7 +225,7 @@ export default function DemoPage() {
       <button
         onClick={runDemo}
         disabled={running}
-        className="w-full py-3 rounded-xl bg-[#00C2FF] text-[#021019] font-semibold text-sm md:text-[15px] tracking-wide hover:bg-[#22D1FF] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full py-3 rounded-xl bg-[#00727F] text-white font-semibold text-sm md:text-[15px] tracking-wide hover:bg-[#008A99] dark:bg-[#00C2FF] dark:text-[#021019] dark:hover:bg-[#22D1FF] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {running ? (
           <span className="flex items-center justify-center gap-3">

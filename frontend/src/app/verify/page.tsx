@@ -96,7 +96,7 @@ export default function VerifyPage() {
               <button
                 key={agent.id}
                 onClick={() => setAgentId(agent.id)}
-                className="text-[11px] md:text-xs px-3 py-1.5 rounded-lg bg-card-hover text-muted hover:text-foreground hover:bg-[#0C1824] border border-card-border hover:border-input-border transition-all"
+                className="text-[11px] md:text-xs px-3 py-1.5 rounded-lg bg-card-hover text-muted hover:text-foreground dark:hover:bg-[#0C1824] border border-card-border hover:border-input-border transition-all"
               >
                 {agent.label}
               </button>
@@ -153,7 +153,7 @@ export default function VerifyPage() {
         <button
           onClick={handleVerify}
           disabled={loading || !agentId.trim()}
-          className="w-full py-3 rounded-lg bg-[#00C2FF] text-[#021019] font-semibold text-sm md:text-[15px] tracking-wide hover:bg-[#22D1FF] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full py-3 rounded-lg bg-[#00727F] text-white font-semibold text-sm md:text-[15px] tracking-wide hover:bg-[#008A99] dark:bg-[#00C2FF] dark:text-[#021019] dark:hover:bg-[#22D1FF] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {loading ? "Verifying…" : "Verify Agent"}
         </button>
