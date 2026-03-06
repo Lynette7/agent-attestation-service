@@ -34,7 +34,6 @@ export default function AttestPage() {
       { label: "Submitting on-chain", status: "pending" },
     ]);
 
-    // Simulate step progression (the API does all 4 steps)
     const stepTimers = [800, 1500, 2500];
     for (let i = 0; i < stepTimers.length; i++) {
       await new Promise((r) => setTimeout(r, stepTimers[i]));
@@ -64,32 +63,38 @@ export default function AttestPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-white">Request Attestation</h1>
-        <p className="text-gray-400">
-          Trigger the full attestation flow: fetch performance data, check
-          eligibility, generate ZK proof, and submit on-chain.
+    <div className="w-full max-w-5xl mx-auto space-y-8 xl:space-y-10 px-4 lg:px-0">
+      <div className="space-y-1.5">
+        <h1 className="text-[28px] md:text-[32px] font-bold text-foreground tracking-tight">
+          Request Attestation
+        </h1>
+        <p className="text-[15px] md:text-base text-muted leading-relaxed">
+          Trigger the full attestation flow: fetch performance data, check eligibility,
+          generate ZK proof, and submit on-chain.
         </p>
       </div>
 
       {/* Form */}
-      <div className="rounded-xl border border-card-border bg-card p-6 space-y-6">
+      <div className="rounded-2xl border border-card-border bg-card card-shadow p-6 md:p-7 space-y-6 md:space-y-7">
         <div className="space-y-2">
-          <label className="text-sm text-slate-400">Agent ID (bytes32 hex)</label>
+          <label className="text-[11px] md:text-xs font-semibold text-muted uppercase tracking-wider">
+            Agent ID (bytes32 hex)
+          </label>
           <input
             type="text"
             value={agentId}
             onChange={(e) => setAgentId(e.target.value)}
             placeholder="0x..."
-            className="w-full bg-cl-dark border border-card-border rounded-lg px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cl-blue/50 font-mono"
+            className="input-base w-full border rounded-lg px-4 py-2.5 text-sm md:text-[15px] font-mono focus:ring-2 focus:ring-cl-blue/20 transition-all"
           />
         </div>
 
         {/* Tier Selection */}
         <div className="space-y-3">
-          <label className="text-sm text-gray-400">Select Tier</label>
-          <div className="grid grid-cols-2 gap-4">
+          <label className="text-[11px] md:text-xs font-semibold text-muted uppercase tracking-wider">
+            Select Tier
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {(["STANDARD", "VERIFIED"] as const).map((t) => {
               const config = TIER_CONFIG[t];
               const selected = tier === t;
@@ -97,26 +102,24 @@ export default function AttestPage() {
                 <button
                   key={t}
                   onClick={() => setTier(t)}
-                  className={`rounded-xl border p-4 text-left transition-all ${
+                  className={`rounded-xl border p-4 md:p-5 text-left transition-all ${
                     selected
-                      ? config.bgClass + " ring-1 ring-offset-0 " +
-                        (t === "STANDARD" ? "ring-cl-blue/50" : "ring-cl-yellow/50")
-                      : "border-card-border bg-cl-dark hover:border-gray-700"
-                  }`}
+                      ? "border-[#00727F] bg-card text-foreground"
+                      : "border-card-border bg-card text-muted"
+                  } hover:border-[#00727F] hover:bg-[#0C1824] hover:text-[#ECF6FF]`}
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <TierBadge tier={t} size="sm" />
                     {selected && (
-                      <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <svg className="w-4 h-4 text-cl-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {config.taskThreshold}+ tasks, {config.rateThreshold}%+
-                    success
+                  <p className="text-xs md:text-[13px] text-muted mt-1">
+                    {config.taskThreshold}+ tasks, {config.rateThreshold}%+ success
                   </p>
-                  <p className="text-[10px] text-gray-600 mt-0.5">
+                  <p className="text-[10px] md:text-[11px] text-muted/70 mt-0.5">
                     {config.expiryLabel}
                   </p>
                 </button>
@@ -128,28 +131,24 @@ export default function AttestPage() {
         <button
           onClick={handleAttest}
           disabled={loading || !agentId.trim()}
-          className={`w-full py-3 rounded-lg font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-            tier === "VERIFIED"
-              ? "bg-cl-yellow/10 border border-cl-yellow/30 text-cl-yellow hover:bg-cl-yellow/20"
-              : "bg-cl-blue/10 border border-cl-blue/30 text-cl-blue-light hover:bg-cl-blue/20"
-          }`}
+          className="w-full py-3 rounded-lg font-semibold text-sm md:text-[15px] tracking-wide transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-[#00C2FF] text-[#021019] hover:bg-[#22D1FF]"
         >
-          {loading ? "Processing..." : `Request ${tier} Attestation`}
+          {loading ? "Processing…" : `Request ${tier} Attestation`}
         </button>
       </div>
 
       {/* Progress Steps */}
       {steps.length > 0 && (
-        <div className="rounded-xl border border-card-border bg-card p-6 space-y-4">
-          <h3 className="text-sm font-medium text-slate-400">
+        <div className="rounded-xl border border-card-border bg-card card-shadow p-6 space-y-4">
+          <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">
             Attestation Pipeline
           </h3>
           <div className="space-y-3">
             {steps.map((step, i) => (
               <div key={i} className="flex items-center gap-3">
                 {step.status === "done" && (
-                  <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-3.5 h-3.5 text-cl-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <div className="w-6 h-6 rounded-full bg-cl-green/15 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-3.5 h-3.5 text-cl-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
@@ -160,33 +159,31 @@ export default function AttestPage() {
                   </div>
                 )}
                 {step.status === "pending" && (
-                  <div className="w-6 h-6 rounded-full bg-gray-800 flex-shrink-0" />
+                  <div className="w-6 h-6 rounded-full border-2 border-card-border flex-shrink-0" />
                 )}
                 {step.status === "error" && (
-                  <div className="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-3.5 h-3.5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <div className="w-6 h-6 rounded-full bg-red-500/15 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-3.5 h-3.5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </div>
                 )}
                 <div>
                   <p
-                    className={`text-sm ${
+                    className={`text-sm font-medium ${
                       step.status === "done"
                         ? "text-cl-green"
                         : step.status === "active"
-                        ? "text-white"
+                        ? "text-foreground"
                         : step.status === "error"
                         ? "text-red-400"
-                        : "text-gray-600"
+                        : "text-muted"
                     }`}
                   >
                     {step.label}
                   </p>
                   {step.detail && (
-                    <p className="text-xs text-red-400/70 mt-0.5">
-                      {step.detail}
-                    </p>
+                    <p className="text-xs text-red-400/70 mt-0.5">{step.detail}</p>
                   )}
                 </div>
               </div>
@@ -197,46 +194,36 @@ export default function AttestPage() {
 
       {/* Result */}
       {result && (
-        <div className="rounded-xl border border-cl-green/20 bg-cl-green/5 glow-green p-6 space-y-4">
+        <div className="rounded-xl border border-cl-green/20 bg-cl-green/5 glow-green card-shadow p-6 space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-cl-green/20 flex items-center justify-center">
-              <svg className="w-5 h-5 text-cl-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="w-10 h-10 rounded-full bg-cl-green/15 flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-cl-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-white">
-                Attestation Created!
-              </h3>
-              <p className="text-sm text-gray-400">
-                On-chain via EAS
-              </p>
+            <div className="flex-1">
+              <h3 className="text-base font-semibold text-foreground">Attestation Created</h3>
+              <p className="text-xs text-muted">On-chain via EAS</p>
             </div>
             <TierBadge tier={result.tier} size="lg" />
           </div>
 
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-xs text-gray-500">Attestation UID</p>
-              <p className="font-mono text-gray-300">
-                {shortenHex(result.attestation_uid, 12)}
-              </p>
+              <p className="text-[11px] text-muted font-semibold uppercase tracking-wider mb-0.5">Attestation UID</p>
+              <p className="font-mono text-foreground text-xs">{shortenHex(result.attestation_uid, 12)}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Transaction</p>
-              <p className="font-mono text-gray-300">
-                {shortenHex(result.tx_hash, 12)}
-              </p>
+              <p className="text-[11px] text-muted font-semibold uppercase tracking-wider mb-0.5">Transaction</p>
+              <p className="font-mono text-foreground text-xs">{shortenHex(result.tx_hash, 12)}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Task Threshold</p>
-              <p className="text-gray-300">{result.task_threshold}+ tasks</p>
+              <p className="text-[11px] text-muted font-semibold uppercase tracking-wider mb-0.5">Task Threshold</p>
+              <p className="text-foreground text-sm font-medium">{result.task_threshold}+ tasks</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Rate Threshold</p>
-              <p className="text-gray-300">
-                {(result.rate_threshold_bps / 100).toFixed(1)}%+ success
-              </p>
+              <p className="text-[11px] text-muted font-semibold uppercase tracking-wider mb-0.5">Rate Threshold</p>
+              <p className="text-foreground text-sm font-medium">{(result.rate_threshold_bps / 100).toFixed(1)}%+ success</p>
             </div>
           </div>
         </div>

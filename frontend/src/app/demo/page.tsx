@@ -42,7 +42,6 @@ export default function DemoPage() {
     setResult(null);
 
     try {
-      // ─── Phase 1: Agent A gets attestation ──────────────
       setPhase("Phase 1: Agent A earns STANDARD attestation");
       addLog("A", "Requesting STANDARD attestation...", "action");
       await sleep(500);
@@ -71,13 +70,11 @@ export default function DemoPage() {
 
       await sleep(1000);
 
-      // ─── Phase 2: Agent B receives task request ─────────
       setPhase("Phase 2: Agent A delegates task to Agent B");
       addLog("A", "Task request: Analyze sentiment data (priority: medium)", "action");
       addLog("B", "Task received. Verifying Agent A credentials...", "action");
       await sleep(1000);
 
-      // ─── Phase 3: Agent B verifies Agent A ──────────────
       setPhase("Phase 3: Agent B verifies Agent A on-chain");
       addLog("B", "Querying on-chain attestations for Agent A...", "action");
       await sleep(500);
@@ -102,14 +99,12 @@ export default function DemoPage() {
 
           await sleep(800);
 
-          // ─── Phase 4: Task accepted ───────────────────────
           setPhase("Phase 4: Task accepted — trust established");
           addLog("B", "Trust verified. Accepting task delegation.", "success");
           addLog("A", "Task delegation confirmed. Work beginning.", "success");
 
           await sleep(1000);
 
-          // ─── Phase 5: Endorsement ─────────────────────────
           setPhase("Phase 5: Agent B endorses Agent A");
           addLog("B", "Submitting on-chain endorsement for Agent A...", "action");
 
@@ -157,70 +152,71 @@ export default function DemoPage() {
   const actorColors = {
     A: "text-cl-blue-light",
     B: "text-cl-yellow",
-    system: "text-gray-500",
+    system: "text-muted",
   };
 
   const actorLabels = {
     A: "Agent A",
     B: "Agent B",
-    system: "System",
+    system: "System ",
   };
 
   const typeStyles = {
-    info: "text-gray-400",
+    info: "text-muted",
     success: "text-cl-green",
     error: "text-red-400",
-    action: "text-white",
+    action: "text-foreground",
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-white">
+    <div className="w-full max-w-5xl mx-auto space-y-8 xl:space-y-10 px-4 lg:px-0">
+      <div className="space-y-1.5">
+        <h1 className="text-[28px] md:text-[32px] font-bold text-foreground tracking-tight">
           Agent-to-Agent Verification Demo
         </h1>
-        <p className="text-gray-400">
-          Watch Agent B verify Agent A&apos;s on-chain credentials before
-          accepting a delegated task. This demonstrates the full trust
-          verification flow.
+        <p className="text-[15px] md:text-base text-muted leading-relaxed">
+          Watch Agent B verify Agent A&apos;s on-chain credentials before accepting a delegated
+          task. This demonstrates the full trust verification flow.
         </p>
       </div>
 
       {/* Agent Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-cl-blue/20 bg-cl-blue/5 p-5 space-y-3">
+        <div className="group rounded-2xl border border-card-border bg-card card-shadow p-5 md:p-6 space-y-3 transition-colors duration-150 hover:border-[#00727F] hover:bg-[#0C1824]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-cl-blue/20 flex items-center justify-center text-cl-blue-light font-bold">
+            <div className="w-10 h-10 rounded-full bg-[#00B3FF] flex items-center justify-center text-[#021019] font-bold text-sm flex-shrink-0">
               A
             </div>
             <div>
-              <p className="font-medium text-white">Agent A (Task Delegator)</p>
-              <p className="text-xs text-gray-500 font-mono">
+              <p className="font-semibold text-foreground text-[15px] md:text-[16px]">
+                Agent A — Task Delegator
+              </p>
+              <p className="text-[12px] md:text-[13px] text-muted font-mono mt-0.5">
                 {shortenHex(AGENT_A_ID, 8)}
               </p>
             </div>
           </div>
-          <p className="text-xs text-gray-400">
-            Has 25 tasks at 80% success. STANDARD eligible. Wants to delegate
-            work.
+          <p className="text-[13px] md:text-[14px] text-muted leading-relaxed">
+            25 tasks at 80% success. STANDARD eligible. Wants to delegate work.
           </p>
         </div>
 
-        <div className="rounded-xl border border-cl-yellow/20 bg-cl-yellow/5 p-5 space-y-3">
+        <div className="group rounded-2xl border border-card-border bg-card card-shadow p-5 md:p-6 space-y-3 transition-colors duration-150 hover:border-[#00727F] hover:bg-[#0C1824]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-cl-yellow/20 flex items-center justify-center text-cl-yellow font-bold">
+            <div className="w-10 h-10 rounded-full bg-[#FF4B81] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
               B
             </div>
             <div>
-              <p className="font-medium text-white">Agent B (Verifier)</p>
-              <p className="text-xs text-gray-500 font-mono">
+              <p className="font-semibold text-foreground text-[15px] md:text-[16px]">
+                Agent B — Verifier
+              </p>
+              <p className="text-[12px] md:text-[13px] text-muted font-mono mt-0.5">
                 {shortenHex(AGENT_B_ID, 8)}
               </p>
             </div>
           </div>
-          <p className="text-xs text-gray-400">
-            Requires STANDARD tier minimum to accept delegated tasks. Checks
-            on-chain.
+          <p className="text-[13px] md:text-[14px] text-muted leading-relaxed">
+            Requires STANDARD tier minimum to accept delegated tasks. Checks on-chain.
           </p>
         </div>
       </div>
@@ -229,7 +225,7 @@ export default function DemoPage() {
       <button
         onClick={runDemo}
         disabled={running}
-        className="w-full py-4 rounded-xl bg-gradient-to-r from-cl-blue/10 to-cl-yellow/10 border border-gray-700 text-white font-medium hover:from-cl-blue/20 hover:to-cl-yellow/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full py-3 rounded-xl bg-[#00C2FF] text-[#021019] font-semibold text-sm md:text-[15px] tracking-wide hover:bg-[#22D1FF] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {running ? (
           <span className="flex items-center justify-center gap-3">
@@ -243,25 +239,25 @@ export default function DemoPage() {
 
       {/* Phase Indicator */}
       {phase && (
-        <div className="rounded-lg border border-cl-purple/20 bg-cl-purple/5 px-4 py-2">
-          <p className="text-sm text-cl-purple font-medium">{phase}</p>
+        <div className="rounded-lg border border-cl-purple/20 bg-cl-purple/5 px-4 py-2.5">
+          <p className="text-sm text-cl-purple font-semibold">{phase}</p>
         </div>
       )}
 
       {/* Log Output */}
       {logs.length > 0 && (
-        <div className="rounded-xl border border-card-border bg-cl-dark p-4 space-y-1.5 font-mono text-sm max-h-96 overflow-y-auto">
+        <div className="rounded-xl border border-card-border bg-input-bg p-4 space-y-1.5 font-mono text-sm max-h-96 overflow-y-auto card-shadow">
           {logs.map((log, i) => (
             <div key={i} className="flex gap-2">
-              <span className="text-gray-600 flex-shrink-0 hidden sm:inline sm:w-20">
+              <span className="text-muted/60 flex-shrink-0 hidden sm:inline sm:w-20 text-xs">
                 {log.timestamp}
               </span>
               <span
-                className={`flex-shrink-0 sm:w-20 font-semibold ${actorColors[log.actor]}`}
+                className={`flex-shrink-0 sm:w-20 font-semibold text-xs ${actorColors[log.actor]}`}
               >
                 [{actorLabels[log.actor]}]
               </span>
-              <span className={`${typeStyles[log.type]} min-w-0 break-words`}>{log.message}</span>
+              <span className={`${typeStyles[log.type]} min-w-0 break-words text-xs`}>{log.message}</span>
             </div>
           ))}
         </div>
@@ -270,7 +266,7 @@ export default function DemoPage() {
       {/* Result */}
       {result && (
         <div
-          className={`rounded-xl border p-6 ${
+          className={`rounded-xl border p-6 card-shadow ${
             result === "accepted"
               ? "border-cl-green/20 bg-cl-green/5 glow-green"
               : "border-red-500/20 bg-red-500/5"
@@ -278,27 +274,27 @@ export default function DemoPage() {
         >
           <div className="flex items-center gap-4">
             <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                result === "accepted" ? "bg-cl-green/20" : "bg-red-500/20"
+              className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${
+                result === "accepted" ? "bg-cl-green/15" : "bg-red-500/15"
               }`}
             >
               {result === "accepted" ? (
-                <svg className="w-6 h-6 text-cl-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-5 h-5 text-cl-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               ) : (
-                <svg className="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               )}
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-base font-semibold text-foreground">
                 {result === "accepted"
                   ? "Task Delegation Accepted"
                   : "Task Delegation Rejected"}
               </h3>
-              <p className="text-sm text-gray-400">
+              <p className="text-xs text-muted mt-0.5">
                 {result === "accepted"
                   ? "Agent B verified Agent A's on-chain credentials and accepted the task."
                   : "Agent B could not verify Agent A's credentials. Task rejected."}
@@ -309,39 +305,42 @@ export default function DemoPage() {
       )}
 
       {/* Explanation */}
-      <div className="rounded-xl border border-card-border bg-card p-6 space-y-3">
-        <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+      <div className="rounded-2xl border border-card-border bg-card card-shadow p-6 md:p-7 space-y-4">
+        <h3 className="text-[11px] md:text-xs font-semibold text-muted uppercase tracking-wider">
           What This Demonstrates
         </h3>
-        <ul className="space-y-2 text-sm text-gray-400">
-          <li className="flex items-start gap-2">
-            <span className="text-cl-blue-light mt-1">1.</span>
-            <span>
-              Agent A earns a STANDARD attestation via the full pipeline:
-              performance fetch → eligibility check → ZK proof → EAS on-chain
-            </span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-cl-yellow mt-1">2.</span>
-            <span>
-              Agent B queries Agent A&apos;s on-chain attestations, filtering by
-              tier and checking for revocation/expiry
-            </span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-cl-green mt-1">3.</span>
-            <span>
-              Trust is established cryptographically — no raw data shared, no
-              central authority needed
-            </span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-cl-purple mt-1">4.</span>
-            <span>
-              Agent B submits an on-chain endorsement after successful
-              collaboration
-            </span>
-          </li>
+        <ul className="space-y-3">
+          {[
+            {
+              color: "text-cl-blue-light",
+              num: "1",
+              text: "Agent A earns a STANDARD attestation via the full pipeline: performance fetch → eligibility check → ZK proof → EAS on-chain",
+            },
+            {
+              color: "text-cl-yellow",
+              num: "2",
+              text: "Agent B queries Agent A's on-chain attestations, filtering by tier and checking for revocation/expiry",
+            },
+            {
+              color: "text-cl-green",
+              num: "3",
+              text: "Trust is established cryptographically — no raw data shared, no central authority needed",
+            },
+            {
+              color: "text-cl-purple",
+              num: "4",
+              text: "Agent B submits an on-chain endorsement after successful collaboration",
+            },
+          ].map((item) => (
+            <li key={item.num} className="flex items-start gap-3">
+              <span className={`${item.color} font-bold text-xs md:text-[13px] mt-0.5 flex-shrink-0`}>
+                {item.num}.
+              </span>
+              <span className="text-muted text-[13px] md:text-[14px] leading-relaxed">
+                {item.text}
+              </span>
+            </li>
+          ))}
         </ul>
       </div>
     </div>

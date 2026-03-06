@@ -44,15 +44,14 @@ export default function VerifyPage() {
     }
   }
 
-  // Pre-seeded demo agents from mock API
   const DEMO_AGENTS = [
     {
       id: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-      label: "Demo Agent (STANDARD eligible)",
+      label: "Demo Agent (STANDARD)",
     },
     {
       id: "0x1111111111111111111111111111111111111111111111111111111111111111",
-      label: "High-performer (VERIFIED eligible)",
+      label: "High-performer (VERIFIED)",
     },
     {
       id: "0x2222222222222222222222222222222222222222222222222222222222222222",
@@ -61,37 +60,43 @@ export default function VerifyPage() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-white">Verify Agent</h1>
-        <p className="text-gray-400">
+    <div className="w-full max-w-5xl mx-auto space-y-8 xl:space-y-10 px-4 lg:px-0">
+      <div className="space-y-1.5">
+        <h1 className="text-[28px] md:text-[32px] font-bold text-foreground tracking-tight">
+          Verify Agent
+        </h1>
+        <p className="text-[15px] md:text-base text-muted leading-relaxed">
           Look up an agent&apos;s on-chain attestations, check tier status, and
           verify ZK proofs.
         </p>
       </div>
 
       {/* Search */}
-      <div className="rounded-xl border border-card-border bg-card p-6 space-y-4">
+      <div className="rounded-2xl border border-card-border bg-card card-shadow p-6 md:p-7 space-y-5 md:space-y-6">
         <div className="space-y-2">
-          <label className="text-sm text-slate-400">Agent ID (bytes32 hex)</label>
+          <label className="text-[11px] md:text-xs font-semibold text-muted uppercase tracking-wider">
+            Agent ID (bytes32 hex)
+          </label>
           <input
             type="text"
             value={agentId}
             onChange={(e) => setAgentId(e.target.value)}
-            placeholder="0xabcdef1234567890..."
-            className="w-full bg-cl-dark border border-card-border rounded-lg px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cl-blue/50 font-mono"
+            placeholder="0xabcdef1234567890…"
+            className="input-base w-full border rounded-lg px-4 py-2.5 text-sm md:text-[15px] font-mono focus:ring-2 focus:ring-cl-blue/20 transition-all"
           />
         </div>
 
         {/* Quick select demo agents */}
         <div className="space-y-2">
-          <p className="text-xs text-gray-500">Quick select:</p>
+          <p className="text-[11px] md:text-xs font-semibold text-muted uppercase tracking-wider">
+            Quick select:
+          </p>
           <div className="flex flex-wrap gap-2">
             {DEMO_AGENTS.map((agent) => (
               <button
                 key={agent.id}
                 onClick={() => setAgentId(agent.id)}
-                className="text-xs px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-colors border border-transparent hover:border-gray-700"
+                className="text-[11px] md:text-xs px-3 py-1.5 rounded-lg bg-card-hover text-muted hover:text-foreground hover:bg-[#0C1824] border border-card-border hover:border-input-border transition-all"
               >
                 {agent.label}
               </button>
@@ -101,12 +106,14 @@ export default function VerifyPage() {
 
         {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-1">
-            <label className="text-xs text-gray-500">Min Tier</label>
+          <div className="space-y-1.5">
+            <label className="text-[11px] md:text-xs font-semibold text-muted uppercase tracking-wider">
+              Min Tier
+            </label>
             <select
               value={minTier}
               onChange={(e) => setMinTier(e.target.value as TierName | "")}
-              className="w-full bg-cl-dark border border-card-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cl-blue/50"
+              className="input-base w-full border rounded-lg px-3 py-2 text-sm md:text-[15px] focus:ring-2 focus:ring-cl-blue/20 transition-all"
             >
               <option value="">Any</option>
               <option value="STANDARD">STANDARD</option>
@@ -114,27 +121,31 @@ export default function VerifyPage() {
             </select>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs text-gray-500">Max Age (days)</label>
+          <div className="space-y-1.5">
+            <label className="text-[11px] md:text-xs font-semibold text-muted uppercase tracking-wider">
+              Max Age (days)
+            </label>
             <input
               type="number"
               value={maxAgeDays}
               onChange={(e) => setMaxAgeDays(e.target.value)}
               placeholder="No limit"
-              className="w-full bg-cl-dark border border-card-border rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cl-blue/50"
+              className="input-base w-full border rounded-lg px-3 py-2 text-sm md:text-[15px] focus:ring-2 focus:ring-cl-blue/20 transition-all"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs text-gray-500">Include Expired</label>
-            <label className="flex items-center gap-2 h-[38px]">
+          <div className="space-y-1.5">
+            <label className="text-[11px] md:text-xs font-semibold text-muted uppercase tracking-wider">
+              Include Expired
+            </label>
+            <label className="flex items-center gap-2 h-[38px] cursor-pointer">
               <input
                 type="checkbox"
                 checked={includeExpired}
                 onChange={(e) => setIncludeExpired(e.target.checked)}
-                className="rounded border-gray-600"
+                className="rounded border-input-border accent-cl-blue w-4 h-4"
               />
-              <span className="text-sm text-gray-400">Show expired</span>
+              <span className="text-sm md:text-[15px] text-muted">Show expired</span>
             </label>
           </div>
         </div>
@@ -142,16 +153,16 @@ export default function VerifyPage() {
         <button
           onClick={handleVerify}
           disabled={loading || !agentId.trim()}
-          className="w-full py-3 rounded-lg bg-cl-blue/10 border border-cl-blue/30 text-cl-blue-light font-medium hover:bg-cl-blue/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full py-3 rounded-lg bg-[#00C2FF] text-[#021019] font-semibold text-sm md:text-[15px] tracking-wide hover:bg-[#22D1FF] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {loading ? "Verifying..." : "Verify Agent"}
+          {loading ? "Verifying…" : "Verify Agent"}
         </button>
       </div>
 
       {/* Loading */}
       {loading && (
         <div className="flex justify-center py-12">
-          <LoadingSpinner label="Querying on-chain attestations..." />
+          <LoadingSpinner label="Querying on-chain attestations…" />
         </div>
       )}
 
@@ -167,7 +178,7 @@ export default function VerifyPage() {
         <div className="space-y-6">
           {/* Verification Verdict */}
           <div
-            className={`rounded-xl border p-6 ${
+            className={`rounded-xl border p-6 card-shadow ${
               verifyResult.verified
                 ? "border-cl-green/20 bg-cl-green/5 glow-green"
                 : "border-red-500/20 bg-red-500/5"
@@ -175,25 +186,25 @@ export default function VerifyPage() {
           >
             <div className="flex items-center gap-4">
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                  verifyResult.verified ? "bg-cl-green/20" : "bg-red-500/20"
+                className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  verifyResult.verified ? "bg-cl-green/15" : "bg-red-500/15"
                 }`}
               >
                 {verifyResult.verified ? (
-                  <svg className="w-6 h-6 text-cl-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-5 h-5 text-cl-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 ) : (
-                  <svg className="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 )}
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-white">
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-foreground">
                   {verifyResult.verified ? "Verified" : "Not Verified"}
                 </h3>
-                <p className="text-sm text-gray-400">
+                <p className="text-xs text-muted font-mono">
                   Agent {shortenHex(agentId)}
                 </p>
               </div>
@@ -217,36 +228,19 @@ export default function VerifyPage() {
           {/* Reputation Summary */}
           {reputation && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
                 Reputation Summary
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard
-                  label="Total"
-                  value={reputation.total_attestations}
-                  color="gray"
-                />
-                <StatCard
-                  label="Standard"
-                  value={reputation.standard_count}
-                  color="blue"
-                />
-                <StatCard
-                  label="Verified"
-                  value={reputation.verified_count}
-                  color="amber"
-                />
-                <StatCard
-                  label="Revoked"
-                  value={reputation.revoked_count}
-                  color="red"
-                />
+                <StatCard label="Total" value={reputation.total_attestations} color="gray" />
+                <StatCard label="Standard" value={reputation.standard_count} color="blue" />
+                <StatCard label="Verified" value={reputation.verified_count} color="amber" />
+                <StatCard label="Revoked" value={reputation.revoked_count} color="red" />
               </div>
 
-              {/* All Attestations */}
               {reputation.attestations.length > 0 && (
                 <div className="space-y-3">
-                  <h4 className="text-sm text-gray-400 font-medium">
+                  <h4 className="text-xs font-semibold text-muted uppercase tracking-wider">
                     All Attestations
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
