@@ -59,7 +59,7 @@ export default function DashboardPage() {
           return (
             <div
               key={tier}
-              className="group rounded-2xl border border-card-border bg-card card-shadow p-6 space-y-5 transition-transform duration-200 hover:-translate-y-0.5 hover:border-[#00727F] hover:bg-[#0C1824]"
+              className="group rounded-2xl border border-card-border bg-card card-shadow p-6 space-y-5 transition-transform duration-200 hover:-translate-y-0.5 dark:hover:border-[#00727F] dark:hover:bg-[#0C1824]"
             >
               {/* Tier name + badge */}
               <div className="flex items-center justify-between">
@@ -119,7 +119,7 @@ export default function DashboardPage() {
             href: "/verify",
             accentColor: "text-cl-blue-light",
             iconBg: "bg-cl-blue/15 dark:bg-cl-blue/10",
-            hoverBorder: "hover:border-[#00727F] hover:bg-[#0C1824]",
+            hoverBorder: "dark:hover:border-[#00727F] dark:hover:bg-[#0C1824]",
             label: "Verify Agent",
             desc: "Look up an agent's attestations and verify their tier status",
             icon: (
@@ -132,7 +132,7 @@ export default function DashboardPage() {
             href: "/attest",
             accentColor: "text-cl-yellow",
             iconBg: "bg-cl-yellow/15 dark:bg-cl-yellow/10",
-            hoverBorder: "hover:border-[#00727F] hover:bg-[#0C1824]",
+            hoverBorder: "dark:hover:border-[#00727F] dark:hover:bg-[#0C1824]",
             label: "Request Attestation",
             desc: "Request a STANDARD or VERIFIED attestation with ZK proof",
             icon: (
@@ -145,7 +145,7 @@ export default function DashboardPage() {
             href: "/demo",
             accentColor: "text-cl-green",
             iconBg: "bg-cl-green/15 dark:bg-cl-green/10",
-            hoverBorder: "hover:border-[#00727F] hover:bg-[#0C1824]",
+            hoverBorder: "dark:hover:border-[#00727F] dark:hover:bg-[#0C1824]",
             label: "Agent-to-Agent Demo",
             desc: "Watch Agent B verify Agent A before accepting a task",
             icon: (
@@ -210,7 +210,7 @@ export default function DashboardPage() {
           ].map((item) => (
             <div
               key={item.step}
-              className="group flex items-start gap-3 rounded-lg px-3 py-2 -mx-3 transition-colors duration-150 hover:bg-[#0C1824]"
+              className="group flex items-start gap-3 rounded-lg px-3 py-2 -mx-3 transition-colors duration-150 dark:hover:bg-[#0C1824]"
             >
               <span
                 className="w-8 h-8 rounded-full text-[11px] font-semibold flex items-center justify-center flex-shrink-0"
