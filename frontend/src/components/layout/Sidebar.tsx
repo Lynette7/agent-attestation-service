@@ -106,7 +106,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               href={item.href}
               onClick={onClose}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-all duration-150",
+                "group flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-all duration-150",
                 isActive
                   ? "bg-[#00727F] text-[#ECF6FF]"
                   : "text-muted hover:text-[#ECF6FF] hover:bg-[#0C1824]"
