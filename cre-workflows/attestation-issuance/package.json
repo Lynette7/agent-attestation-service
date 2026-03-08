@@ -1,0 +1,15 @@
+{
+  "name": "attestation-issuance",
+  "private": true,
+  "scripts": {
+    "postinstall": "bunx cre-setup"
+  },
+  "dependencies": {
+    "@chainlink/cre-sdk": "1.1.1",
+    "viem": "2.46.1",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

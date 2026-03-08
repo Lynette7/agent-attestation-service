@@ -1,0 +1,36 @@
+# ── Dependencies ──────────────────────────────────────────────────
+node_modules/
+frontend/node_modules/
+
+# ── Build outputs ─────────────────────────────────────────────────
+dist/
+cache/
+artifacts/
+typechain-types/
+coverage/
+coverage.json
+
+# ── Hardhat / test ────────────────────────────────────────────────
+test/
+ignition/
+deployments/
+
+# ── Frontend ──────────────────────────────────────────────────────
+frontend/
+
+# ── Circuit source is copied selectively in the Dockerfile ────────
+# (circuits/capability-threshold is needed; nothing else is)
+# Note: do NOT ignore circuits/ entirely — the Dockerfile COPYs it
+
+# ── Data / secrets ────────────────────────────────────────────────
+data/
+.env
+.env.*
+!.env.example
+
+# ── Git / editor ──────────────────────────────────────────────────
+.git/
+.gitignore
+.DS_Store
+*.log
+.vscode/

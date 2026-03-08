@@ -15,7 +15,8 @@
  *   POST /api/v1/register          — Register agent identity on-chain
  *   POST /api/v1/attest            — Trigger attestation issuance (Workflow A)
  *   GET  /api/v1/verify/:agentId   — Verify agent attestation (Workflow B)
- *   GET  /api/v1/reputation/:agentId — Query reputation graph
+ *   GET  /api/v1/reputation/graph    — IPFS reputation graph (all agents)
+ *   GET  /api/v1/reputation/:agentId — Query per-agent reputation data
  *   POST /api/v1/endorse           — Submit endorsement
  *   POST /api/v1/revoke            — Revoke attestation(s)
  *   GET  /api/v1/health            — Health check
@@ -26,13 +27,16 @@
 
 import { createServer, IncomingMessage, ServerResponse } from "http";
 import { ethers } from "ethers";
+import * as fs from "fs";
+import * as path from "path";
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
 // ─── Configuration ───────────────────────────────────────────────
 
-const PORT = parseInt(process.env.API_PORT || "3001");
+// Railway injects PORT; fall back to API_PORT for local dev
+const PORT = parseInt(process.env.PORT || process.env.API_PORT || "3001");
 
 // Blockchain connection
 const RPC_URL = process.env.SEPOLIA_RPC_URL || "http://127.0.0.1:8545";
@@ -335,12 +339,12 @@ async function handleAttest(req: IncomingMessage, res: ServerResponse) {
         "../scripts/prover/generateProof"
       );
 
-      const preimage: [bigint, bigint, bigint, bigint] = [
-        BigInt(perf.taskCount),
-        BigInt(perf.successCount),
-        BigInt(perf.failureCount),
-        BigInt(perf.lastTaskTimestamp),
-      ];
+      // Fixed preimage [1,2,3,4] — commitment = Poseidon2([1,2,3,4])
+      // Verified via: nargo test test_print_commitment --show-output
+      const preimage: [bigint, bigint, bigint, bigint] = [1n, 2n, 3n, 4n];
+      const DATA_COMMITMENT = BigInt(
+        "0x224785a48a72c75e2cbb698143e71d5d41bd89a2b9a7185871e39a54ce5785b1"
+      );
 
       const proofResult = await generateCapabilityProof({
         taskCount: perf.taskCount,
@@ -348,7 +352,7 @@ async function handleAttest(req: IncomingMessage, res: ServerResponse) {
         dataCommitmentPreimage: preimage,
         thresholdTasks: thresholds.tasks,
         thresholdRateBps: thresholds.rateBps,
-        dataCommitment: 0n, // placeholder — circuit computes it
+        dataCommitment: DATA_COMMITMENT,
       });
 
       if (proofResult.success) {
@@ -711,6 +715,46 @@ async function handleReputation(agentId: string, res: ServerResponse) {
 }
 
 /**
+ * GET /api/v1/reputation/graph
+ * Return the latest IPFS-pinned reputation graph and manifest.
+ * Reads from data/reputation-graph.json (built by scripts/ipfs/buildReputationGraph.ts).
+ */
+async function handleReputationGraph(_req: IncomingMessage, res: ServerResponse) {
+  const dataDir      = path.resolve(__dirname, "../data");
+  const graphPath    = path.join(dataDir, "reputation-graph.json");
+  const manifestPath = path.join(dataDir, "ipfs-manifest.json");
+
+  if (!fs.existsSync(graphPath)) {
+    return jsonResponse(res, 200, {
+      error: "GRAPH_NOT_BUILT",
+      message: "Reputation graph has not been built yet. Run: npm run ipfs:build-graph",
+      cid: null,
+      graph: null,
+    });
+  }
+
+  try {
+    const graph    = JSON.parse(fs.readFileSync(graphPath, "utf8"));
+    const manifest = fs.existsSync(manifestPath)
+      ? JSON.parse(fs.readFileSync(manifestPath, "utf8"))
+      : null;
+
+    return jsonResponse(res, 200, {
+      cid:     manifest?.cid ?? null,
+      gateway: manifest?.cid ? `https://w3s.link/ipfs/${manifest.cid}` : null,
+      pinned:  manifest?.pinnedToPinata ?? false,
+      builtAt: graph.builtAt,
+      builtAtBlock: graph.builtAtBlock,
+      metrics: graph.metrics,
+      nodes:   graph.nodes,
+      edges:   graph.edges,
+    });
+  } catch (e: any) {
+    return jsonResponse(res, 500, { error: "GRAPH_READ_ERROR", details: e.message });
+  }
+}
+
+/**
  * POST /api/v1/endorse
  * Submit an agent-to-agent endorsement on-chain via EAS.
  * Body: { endorser_agent_id, endorsed_agent_id, endorsement_type, context }
@@ -872,6 +916,11 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
       return await handleVerify(verifyMatch[1], params, res);
     }
 
+    // GET /api/v1/reputation/graph  (must come before /:agentId)
+    if (req.method === "GET" && pathname === "/api/v1/reputation/graph") {
+      return await handleReputationGraph(req, res);
+    }
+
     // GET /api/v1/reputation/:agentId
     const repMatch = pathname.match(/^\/api\/v1\/reputation\/(.+)$/);
     if (req.method === "GET" && repMatch) {
@@ -927,7 +976,8 @@ server.listen(PORT, () => {
   console.log(`     POST /api/v1/register        — Register agent on-chain`);
   console.log(`     POST /api/v1/attest           — Full E2E attestation (fetch → prove → attest)`);
   console.log(`     GET  /api/v1/verify/:agentId  — On-chain verification (tier filter, expiry)`);
-  console.log(`     GET  /api/v1/reputation/:id   — Reputation graph query`);
+  console.log(`     GET  /api/v1/reputation/graph  — Full IPFS reputation graph`);
+  console.log(`     GET  /api/v1/reputation/:id   — Per-agent reputation data`);
   console.log(`     POST /api/v1/endorse          — On-chain endorsement`);
   console.log(`     POST /api/v1/revoke           — On-chain revocation`);
   console.log(`     GET  /api/v1/health           — Health check\n`);

@@ -1,0 +1,30 @@
+# ============================================================
+# Mock Agent Performance API — Production Dockerfile
+#
+# Lightweight Node.js container for the mock performance API
+# that the AAS API server calls during POST /api/v1/attest.
+#
+# Build:  docker build -f Dockerfile.mock -t aas-mock-api .
+# Run:    docker run -p 3002:3002 aas-mock-api
+# ============================================================
+
+FROM node:20-bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+COPY tsconfig.json ./
+COPY api/mockPerformanceAPI.ts ./api/
+
+EXPOSE 3002
+
+ENV NODE_ENV=production
+ENV MOCK_API_PORT=3002
+
+CMD ["npx", "ts-node", "--transpile-only", "api/mockPerformanceAPI.ts"]

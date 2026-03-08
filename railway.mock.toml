@@ -1,0 +1,13 @@
+# Railway configuration — Mock Agent Performance API
+# Assign this to the "mock-api" service in Railway dashboard
+# (Settings → Source → railway.toml path → railway.mock.toml)
+
+[build]
+dockerfile = "Dockerfile.mock"
+
+[deploy]
+startCommand = "npx ts-node --transpile-only api/mockPerformanceAPI.ts"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+healthcheckPath = "/health"
+

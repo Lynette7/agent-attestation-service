@@ -54,6 +54,14 @@ fn main(
 }
 
 #[test]
+fn test_print_commitment() {
+    // Print Poseidon2 hash of [1,2,3,4] so the API can use the correct commitment
+    let preimage = [1, 2, 3, 4];
+    let commitment = poseidon2_hash(preimage);
+    println(f"COMMITMENT_1234 = {commitment}");
+}
+
+#[test]
 fn test_valid_proof() {
     // Agent with 150 tasks, 143 successes (95.33% rate)
     // Threshold: 100 tasks, 95% rate (9500 bps)

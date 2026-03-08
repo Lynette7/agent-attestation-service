@@ -1,0 +1,13 @@
+# Railway configuration — AAS API Server
+# Assign this to the "api" service in Railway dashboard
+# (Settings → Source → railway.toml path → railway.toml)
+
+[build]
+dockerfile = "Dockerfile"
+
+[deploy]
+startCommand = "npx ts-node --transpile-only api/server.ts"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+healthcheckPath = "/api/v1/health"
+

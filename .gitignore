@@ -11,3 +11,6 @@ coverage.json
 frontend/.next/
 frontend/node_modules/
 circuits/target/
+
+# Generated data (IPFS graph, manifests)
+data/

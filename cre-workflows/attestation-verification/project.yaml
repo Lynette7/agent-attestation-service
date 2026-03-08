@@ -1,6 +1,4 @@
-name: aas-attestation-verification
-settings:
-  staging-settings:
-    rpcs:
-      - chain-name: ethereum-testnet-sepolia
-        url: "${SEPOLIA_RPC_URL}"
+staging-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia
+      url: "${SEPOLIA_RPC_URL}"

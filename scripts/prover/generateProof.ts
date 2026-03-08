@@ -15,7 +15,7 @@ import * as path from "path";
  */
 
 // ─── Paths ───────────────────────────────────────────────────────
-const CIRCUIT_DIR = path.resolve(__dirname, "../circuits/capability-threshold");
+const CIRCUIT_DIR = path.resolve(__dirname, "../../circuits/capability-threshold");
 const TARGET_DIR = path.join(CIRCUIT_DIR, "target");
 const ARTIFACT = path.join(TARGET_DIR, "capability_threshold.json");
 const VK_PATH = path.join(TARGET_DIR, "vk");
@@ -254,9 +254,11 @@ if (require.main === module) {
 
     // Compute the data commitment using nargo test (preimage = [1,2,3,4])
     // For CLI testing, pass a known commitment value
-    const testCommitment =
-      process.argv[2] ||
-      "0";  // Will be overridden with real poseidon2 hash
+    // Poseidon2([1,2,3,4]) = 0x224785a48a72c75e2cbb698143e71d5d41bd89a2b9a7185871e39a54ce5785b1
+    // Verified via: nargo test test_print_commitment --show-output
+    const DATA_COMMITMENT = BigInt(
+      "0x224785a48a72c75e2cbb698143e71d5d41bd89a2b9a7185871e39a54ce5785b1"
+    );
 
     const result = await generateCapabilityProof({
       taskCount: 150,
@@ -264,7 +266,7 @@ if (require.main === module) {
       dataCommitmentPreimage: [1n, 2n, 3n, 4n],
       thresholdTasks: 100,
       thresholdRateBps: 9500,
-      dataCommitment: BigInt(testCommitment),
+      dataCommitment: DATA_COMMITMENT,
     });
 
     if (result.success) {

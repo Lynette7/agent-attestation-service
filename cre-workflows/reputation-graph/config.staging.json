@@ -1,6 +1,6 @@
 {
-  "registryAddress": "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
-  "easAddress": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
-  "graphStorageAddress": "0x0000000000000000000000000000000000000000",
+  "registryAddress": "0x4a9e22A4402090ae445C166dD08Bd7C3A2725316",
+  "easAddress": "0xC2679fBD37d54388Ce493F1DB75320D236e1815e",
+  "graphStorageAddress": "0x4a9e22A4402090ae445C166dD08Bd7C3A2725316",
   "chainSelectorName": "ethereum-testnet-sepolia"
 }

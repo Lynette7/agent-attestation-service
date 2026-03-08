@@ -1,2 +1,7 @@
-name: attestation-issuance
-workflow-path: "./main.ts"
+staging-settings:
+  user-workflow:
+    workflow-name: "attestation-issuance"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.staging.json"
+    secrets-path: ""

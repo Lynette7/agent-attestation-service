@@ -25,7 +25,8 @@
 
 import { createServer, IncomingMessage, ServerResponse } from "http";
 
-const PORT = parseInt(process.env.MOCK_API_PORT || "3002");
+// Railway injects PORT; fall back to MOCK_API_PORT for local dev
+const PORT = parseInt(process.env.PORT || process.env.MOCK_API_PORT || "3002");
 
 // ─── In-Memory Agent Performance Store ───────────────────────────
 

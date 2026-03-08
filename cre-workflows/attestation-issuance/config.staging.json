@@ -1,6 +1,6 @@
 {
-  "registryAddress": "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
-  "zkVerifierAddress": "0x0165878A594ca255338adfa4d48449f69242Eb8F",
+  "registryAddress": "0x4a9e22A4402090ae445C166dD08Bd7C3A2725316",
+  "zkVerifierAddress": "0xDA75a09F99FB19f44a72e414826ac3811E47EA88",
   "performanceApiUrl": "http://localhost:3002/api/performance",
   "chainSelectorName": "ethereum-testnet-sepolia",
   "gasLimit": "1000000"

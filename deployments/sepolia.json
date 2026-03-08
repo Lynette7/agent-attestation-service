@@ -1,0 +1,34 @@
+{
+  "network": "sepolia",
+  "chainId": "11155111",
+  "deployedAt": "2026-02-26T20:30:21.344Z",
+  "block": 10342928,
+  "deployer": "0x0333a0c03b089abedc231883e3d7107eD955A2e2",
+  "contracts": {
+    "HonkVerifier": "0x3F9E3e9633E4aCD844E53722C57C0f7199de23BC",
+    "AASZKVerifier": "0xDA75a09F99FB19f44a72e414826ac3811E47EA88",
+    "AASRegistry": "0x4a9e22A4402090ae445C166dD08Bd7C3A2725316"
+  },
+  "external": {
+    "EASContract": "0xC2679fBD37d54388Ce493F1DB75320D236e1815e",
+    "EASSchemaRegistry": "0x0a7E2Ff54e76B8E6659aedc9103FB21c038050D0",
+    "CREOrchestrator": "0x0333a0c03b089abedc231883e3d7107eD955A2e2"
+  },
+  "schemas": {
+    "StandardTierAttestation": "0x6f0dae124370a9d3bf7aaca1462bb6b1feb4cd58b40738769fd1dba21d633741",
+    "VerifiedTierAttestation": "0x9f370e3839f1c49b0bf6d0c020fc7e07886ca799870e188ff2ca4da0fc585c59",
+    "EndorsementAttestation": "0x4979dbe5b2efa3a6ff08855e3f904a4c547cdc0e9a326836ddc844f644653f54",
+    "TaskCompletionAttestation": "0x86d64327b12a1d012f55a5f18bdbbc9c67abb4e233d839a8d63b04c4c05579bb"
+  },
+  "etherscan": {
+    "HonkVerifier": "https://sepolia.etherscan.io/address/0x3F9E3e9633E4aCD844E53722C57C0f7199de23BC",
+    "AASZKVerifier": "https://sepolia.etherscan.io/address/0xDA75a09F99FB19f44a72e414826ac3811E47EA88",
+    "AASRegistry": "https://sepolia.etherscan.io/address/0x4a9e22A4402090ae445C166dD08Bd7C3A2725316"
+  },
+  "easScan": {
+    "StandardTier": "https://sepolia.easscan.org/schema/view/0x6f0dae124370a9d3bf7aaca1462bb6b1feb4cd58b40738769fd1dba21d633741",
+    "VerifiedTier": "https://sepolia.easscan.org/schema/view/0x9f370e3839f1c49b0bf6d0c020fc7e07886ca799870e188ff2ca4da0fc585c59",
+    "Endorsement": "https://sepolia.easscan.org/schema/view/0x4979dbe5b2efa3a6ff08855e3f904a4c547cdc0e9a326836ddc844f644653f54",
+    "TaskCompletion": "https://sepolia.easscan.org/schema/view/0x86d64327b12a1d012f55a5f18bdbbc9c67abb4e233d839a8d63b04c4c05579bb"
+  }
+}

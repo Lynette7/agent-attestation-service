@@ -28,7 +28,7 @@ import {
   json,
   Runner,
   type Runtime,
-  type HTTPPayload,
+  type HTTPPayload, sendErrorResponse,
 } from "@chainlink/cre-sdk"
 import {
   encodeAbiParameters,
@@ -44,7 +44,7 @@ import { z } from "zod"
 const configSchema = z.object({
   registryAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Invalid Ethereum address"),
   zkVerifierAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Invalid Ethereum address"),
-  performanceApiUrl: z.string().min(1),
+  performanceApiUrl: z.string().url(),
   chainSelectorName: z.string(),
   gasLimit: z.string(),
 })
@@ -305,3 +305,5 @@ export async function main() {
   const runner = await Runner.newRunner<Config>({ configSchema })
   await runner.run(initWorkflow)
 }
+
+main().catch(sendErrorResponse)

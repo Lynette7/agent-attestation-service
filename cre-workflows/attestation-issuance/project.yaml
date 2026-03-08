@@ -1,6 +1,4 @@
-name: aas-attestation-issuance
-settings:
-  staging-settings:
-    rpcs:
-      - chain-name: ethereum-testnet-sepolia
-        url: "${SEPOLIA_RPC_URL}"
+staging-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia
+      url: "https://sepolia.infura.io/v3/2bc54f0432ff41fba8a6c2fa1a1a94b0"
