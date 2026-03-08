@@ -33,15 +33,6 @@ Agent requests STANDARD or VERIFIED attestation
   → Any agent can verify: GET /api/v1/verify/:id?min_tier=VERIFIED
 ```
 
-## Hackathon
-
-- **Hackathon:** Convergence: A Chainlink Hackathon 2026
-- **Primary Track:** CRE & AI Agents
-- **Secondary Track:** Privacy / Confidential Compute
-- **Submission Deadline:** March 8, 2026
-
----
-
 ## Live Deployment (Sepolia Testnet)
 
 Contracts deployed at block `10342928`, all verified on Etherscan.
@@ -96,82 +87,6 @@ The CID is computed locally using `multiformats` (sha-256 + dag-json codec), the
 | viem | ABI encoding/decoding in CRE workflows |
 | ethers.js v6 | Contract interaction (API server) |
 | Hardhat | Contract development & testing |
-
-## Project Structure
-
-```bash
-aas/
-├── contracts/               # Solidity smart contracts
-│   ├── AASRegistry.sol      # Core registry — two-tier attestations, revocation, reputation graph
-│   ├── AASZKVerifier.sol    # UltraHonk ZK proof verifier wrapper
-│   ├── interfaces/
-│   │   └── IAASZKVerifier.sol
-│   └── verifiers/
-│       └── HonkVerifier.sol # Auto-generated from Barretenberg (bb)
-│   └── mocks/               # EAS + SchemaRegistry mocks for local testing
-│       ├── EASMock.sol
-│       └── SchemaRegistryMock.sol
-├── test/                    # Hardhat test suite (60 tests)
-│   ├── AASRegistry.test.ts  # 31 unit tests (two-tier registry + verifier)
-│   ├── E2EProof.test.ts     # 4 E2E tests (real UltraHonk proofs on-chain)
-│   └── E2EIntegration.test.ts # 25 integration tests (full Day 4 flow)
-├── scripts/
-│   ├── deploy/deploy.ts
-│   ├── deploy/deployAndWire.ts  # Production deployment (Sepolia)
-│   ├── deploy/deployLocal.ts
-│   ├── eas/registerSchemas.ts
-│   ├── prover/generateProof.ts
-│   ├── testCREWorkflows.ts      # 27-test CRE workflow simulation suite
-│   ├── smokeTest.ts             # 14-test E2E smoke suite (Sepolia)
-│   └── ipfs/
-│       ├── buildReputationGraph.ts  # Scan Sepolia events → build graph JSON
-│       └── pinReputationGraph.ts    # Compute CIDv1, commit on-chain
-├── cre-workflows/           # CRE SDK workflow projects (@chainlink/cre-sdk)
-│   ├── attestation-issuance/   # Workflow A: tier-aware attestation issuance
-│   │   ├── main.ts             #   HTTP trigger → ConfidentialHTTPClient → EVMClient.writeReport
-│   │   ├── project.yaml        #   CRE project config (RPC, chain settings)
-│   │   ├── workflow.yaml       #   Entry point declaration
-│   │   ├── config.staging.json #   Contract addresses & chain selector
-│   │   └── secrets.yaml        #   Vault DON secret declarations
-│   ├── attestation-verification/ # Workflow B: verification with tier + expiry filters
-│   │   ├── main.ts             #   HTTP trigger → EVMClient.callContract (reads)
-│   │   ├── project.yaml
-│   │   ├── workflow.yaml
-│   │   └── config.staging.json
-│   ├── reputation-graph/       # Workflow C: reputation graph (roadmap)
-│   │   ├── main.ts             #   EVM Log trigger → IPFS graph update
-│   │   ├── project.yaml
-│   │   ├── workflow.yaml
-│   │   └── config.staging.json
-│   └── legacy/                 # Pre-SDK workflow implementations (reference)
-├── circuits/                # Noir ZK circuits
-│   └── capability-threshold/
-│       ├── Nargo.toml
-│       ├── src/main.nr      # Capability threshold proof circuit (both tiers)
-│       └── target/          # Compiled artifacts (VK, proof, HonkVerifier.sol)
-├── api/                     # REST API + mock services
-│   ├── server.ts            # AAS API server (fully wired to blockchain)
-│   └── mockPerformanceAPI.ts # Mock agent platform API for Confidential HTTP
-├── frontend/                # Next.js 14 dashboard
-│   ├── src/
-│   │   ├── app/             # App Router pages
-│   │   │   ├── page.tsx     # Dashboard home (health, tier overview)
-│   │   │   ├── verify/      # Verify Agent (search, filters, verdict)
-│   │   │   ├── attest/      # Request Attestation (tier select, pipeline)
-│   │   │   └── demo/        # Agent-to-Agent interactive demo
-│   │   ├── components/
-│   │   │   ├── layout/      # Sidebar, Header (wallet connect)
-│   │   │   ├── providers/   # ThirdwebProvider wrapper
-│   │   │   └── ui/          # TierBadge, ExpiryCountdown, AttestationCard, etc.
-│   │   └── lib/             # API client, constants, utils
-│   └── .env.local           # NEXT_PUBLIC_API_URL, NEXT_PUBLIC_THIRDWEB_CLIENT_ID
-├── data/                    # Generated at runtime (gitignored)
-│   ├── reputation-graph.json
-│   └── ipfs-manifest.json
-├── deployments/             # Sepolia deployment artifacts
-├── hardhat.config.ts
-└── .env.example
-```
 
 ## Quick Start
 
@@ -256,59 +171,6 @@ npm run ipfs:pin-graph
 ```bash
 npm run deploy:sepolia
 npm run register-schemas:sepolia
-```
-
----
-
-## Self-Hosting (Railway)
-
-Two services are required: the **AAS API** (needs `nargo` + `bb` for ZK proofs) and the **Mock Performance API** (plain Node.js). Run local first, then push to Railway.
-
-### Test locally with Docker Compose
-
-```bash
-cp .env.example .env   # fill in SEPOLIA_RPC_URL, DEPLOYER_PRIVATE_KEY
-docker compose up --build
-# API: http://localhost:3001
-# Mock: http://localhost:3002
-```
-
-> First build is slow (~5–10 min) while it downloads and compiles nargo + bb.
-
-### Deploy to Railway
-
-**Step 1 — Create the Mock API service**
-
-1. New project → Deploy from GitHub repo
-2. Name it `mock-api`
-3. Settings → Build → **Dockerfile Path** → `Dockerfile.mock`
-4. Settings → Deploy → **Config file path** → `railway.mock.toml`
-5. Deploy — copy the generated URL (e.g. `https://mock-api-xyz.railway.app`)
-
-**Step 2 — Create the AAS API service** (same repo, same project)
-
-1. Add service → Deploy from same GitHub repo
-2. Name it `api`
-3. Settings → Build → **Dockerfile Path** → `Dockerfile`
-4. Settings → Deploy → **Config file path** → `railway.toml`
-5. Variables → add all of the following:
-
-| Variable | Value |
-| --- | --- |
-| `SEPOLIA_RPC_URL` | `https://sepolia.infura.io/v3/YOUR_KEY` |
-| `DEPLOYER_PRIVATE_KEY` | `0x...` |
-| `AAS_REGISTRY_ADDRESS` | `0x4a9e22A4402090ae445C166dD08Bd7C3A2725316` |
-| `AAS_ZK_VERIFIER_ADDRESS` | `0xDA75a09F99FB19f44a72e414826ac3811E47EA88` |
-| `EAS_CONTRACT_ADDRESS` | `0xC2679fBD37d54388Ce493F1DB75320D236e1815e` |
-| `AGENT_PERFORMANCE_API_URL` | `https://mock-api-xyz.railway.app/api/performance` |
-
-6. Deploy
-
-**Step 3 — Point the frontend at the hosted API**
-
-```bash
-# frontend/.env.local
-NEXT_PUBLIC_API_URL=https://api-xyz.railway.app
 ```
 
 ---
@@ -432,25 +294,6 @@ cre workflow simulate
 - **Secrets:** `runtime.getSecret()` backed by `secrets.yaml` + Vault DON
 - **Config:** `config.<target>.json` accessed via `runtime.config`
 - **Logging:** `runtime.log()` (not `console.log`)
-
-## Sprint Plan
-
-- [x] **Day 1 (Feb 17):** EAS schemas, contract deployment, CRE workflow structure, 23 tests passing
-- [x] **Day 2 (Feb 18):** Noir circuit compilation, UltraHonk proof generation, Solidity verifier integration, E2E proof verification (27 tests)
-- [x] **Day 3 (Feb 19):** Two-tier system (STANDARD/VERIFIED), expiry management, revocation, tier-aware Workflow A + B, Confidential HTTP mock API, 35 tests passing
-- [x] **Day 4 (Feb 20):** End-to-end wiring: API → mock perf API → eligibility → ZK proof → on-chain EAS attestation, on-chain verification/revocation/endorsement, EAS mock contracts, 25 integration tests (60 total)
-- [x] **Day 5 (Feb 21):** Next.js 14 frontend — Dashboard, Verify Agent, Request Attestation, Agent-to-Agent Demo pages; Thirdweb wallet connect; dark theme; TierBadge, ExpiryCountdown, AttestationCard components; API client wired to backend; local deploy script (`deployLocal.ts`)
-- [x] **Day 6 (Feb 22):** CRE SDK compliance audit — rewrote all three workflows to use official `@chainlink/cre-sdk` (HTTPCapability, ConfidentialHTTPClient, EVMClient, runtime.report(), viem ABI encoding); CRE project structure (project.yaml, workflow.yaml, config.staging.json, secrets.yaml); moved legacy implementations to `cre-workflows/legacy/`
-- [x] **Day 7 (Feb 23):** Sepolia deployment — all 3 contracts live + Etherscan verified (9/9 smoke tests)
-- [x] **Day 8 (Feb 24):** VK initialized on Sepolia — real UltraHonk proofs verified on-chain
-- [x] **Day 9 (Feb 27):** CRE workflow configs updated to Sepolia addresses — 27/27 simulation tests
-- [x] **Day 10 (Feb 28):** IPFS reputation graph built from Sepolia events — CID committed on-chain
-- [x] **Day 11 (Mar 1):** E2E smoke suite expanded to 14/14; Hardhat 60/60; zero regressions
-- [ ] **Day 12 (Mar 2):** Demo video — attestation flow, ZK proof generation, on-chain verification
-- [ ] **Day 13 (Mar 3):** README polish, submission summary
-- [ ] **Day 14 (Mar 4):** Frontend UX improvements — live Sepolia data wired to dashboard
-- [ ] **Day 15 (Mar 5):** Buffer / stretch goals
-- [ ] **Days 16-18:** Final review and submission
 
 ## License
 
