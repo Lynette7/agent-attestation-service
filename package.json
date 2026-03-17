@@ -26,16 +26,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://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@github.com/Lynette7/aas.git"
+    "url": "git+https://github.com/Lynette7/agent-attestation-service.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/Lynette7/aas/issues"
+    "url": "https://github.com/Lynette7/agent-attestation-service/issues"
   },
-  "homepage": "https://github.com/Lynette7/aas#readme",
+  "homepage": "https://github.com/Lynette7/agent-attestation-service#readme",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@types/node": "^22.0.0",
